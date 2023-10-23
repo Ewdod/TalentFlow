@@ -1,0 +1,147 @@
+﻿@using ApplicationCore.Enums;
+
+@model AdvancePaymentViewModel
+
+@{
+    ViewBag.Title = "Advance Payment Request";
+}
+
+<section class="section">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title">@ViewData["Title"]</h1>
+                    <form asp-action="CreateAdvance" method="post" enctype="multipart/form-data">
+                        @*<div asp-validation-summary="ModelOnly" class="text-danger"></div>*@
+                        <div class="row mb-3">
+                            <label asp-for="AdvanceType" class="col-sm-2 col-form-label">Advance Type</label>
+                            <div class="col-sm-10">
+                                <select id="expenseType" asp-for="AdvanceType" class="form-control" required>
+                                    <option value="">Select..</option>
+                                    @foreach (var expenseType in Enum.GetNames(typeof(AdvancePaymentType)).ToList())
+                                    {
+                                        <option value="@expenseType.ToString()">@expenseType.Replace("_", " ")</option>
+                                    }
+                                </select>
+                            </div>
+                            <span asp-validation-for="AdvanceType" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label asp-for="Advance" class="col-sm-2 col-form-label">Advance Amount</label>
+                            <div class="col-sm-10">
+                                <input asp-for="Advance" id="expenseInput" class="form-control" min="0" step="0.01" required type="number" pattern="[0-9]+([\.,][0-9]+)?" title="Enter a valid number with optional decimal point (e.g., 1000 or 1000.50)">
+                            </div>
+                            <span asp-validation-for="Advance"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="currencySelect" asp-for="Currency" class="col-sm-2 col-form-label">Currency</label>
+                            <div class="col-sm-10">
+                                <select id="currencySelect" asp-for="Currency" class="form-control" required></select>
+                            </div>
+                            <span asp-validation-for="Currency" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label asp-for="Description" class="col-sm-2 col-form-label">Description</label>
+                            <div class="col-sm-10">
+                                <textarea asp-for="Description" class="form-control"></textarea>
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                        </div>
+                        <div class="text-center mt-4">
+                            @if (ViewBag.AdvanceRequestError != null)
+                            {
+                                <span class="alert alert-danger">@ViewBag.AdvanceRequestError</span>
+                            }
+                            @if (ViewData["Message"] != null)
+                            {
+                                <span class="alert alert-warning">@ViewData["Message"]</span>
+                            }   
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<script>
+    window.onload = function () {
+
+        var myHeaders = new Headers();
+        myHeaders.append("apikey", "IFXKFmS52a04sdQcTfNdAH0lZ5AroObA");
+
+        var requestOptions = {
+            method: 'GET',
+            redirect: 'follow',
+            headers: myHeaders
+        };
+
+        fetch("https://api.apilayer.com/fixer/symbols", requestOptions)
+            .then(response => response.json())
+            .then(result => {
+                var currencySelect = document.getElementById('currencySelect');
+                var symbols = result.symbols;
+
+                // Sembollerin dropdown listesine eklenmesi
+                for (var symbol in symbols) {
+                    var option = document.createElement('option');
+                    option.value = symbol;
+                    option.textContent = symbol + ' - ' + symbols[symbol];
+                    currencySelect.appendChild(option);
+                }
+
+                /*   Dropdown listesi değiştikçe dönüşüm yapılması*/
+                currencySelect.addEventListener('change', function () {
+                    calculateTotal(); // Dönüşüm yapıldığında toplamı hesapla
+                });
+
+                // Harcama miktarı değiştikçe toplamı hesapla
+                document.getElementById('expenseInput').addEventListener('input', function () {
+                    calculateTotal();
+                });
+            })
+            .catch(error => console.log('error', error));
+
+         //Toplamı hesapla ve input alanına yaz
+        function calculateTotal() {
+            var selectedSymbol = document.getElementById('currencySelect').value;
+            var expenseAmount = parseFloat(document.getElementById('expenseInput').value);
+
+        if (!isNaN(expenseAmount)) {
+            fetch("https://api.apilayer.com/fixer/convert?to=try&from=" + selectedSymbol + "&amount=" + expenseAmount, requestOptions)
+                .then(response => response.json())
+                .then(result => {
+                    var totalAmountInput = document.getElementById('totalAmountInput');
+                    var totalAmount = (result.result) /*+ " TRY"*/;
+                    /*var formattedAmount = totalAmount.toLocaleString('tr-TR')*/
+                    totalAmountInput.value = totalAmount;
+                })
+                .catch(error => console.log('error', error));
+        } else {
+            // Harcama miktarı geçerli bir sayı değilse, input alanını temizle
+            var totalAmountInput = document.getElementById('totalAmountInput');
+            totalAmountInput.value = "";
+            }
+        }
+        var expenseInput = document.getElementById('expenseInput');
+    };
+    document.addEventListener("DOMContentLoaded", function () {
+        // Reset butonunu bulun
+        var resetButton = document.querySelector("button[type='reset']");
+
+        // Reset butonuna tıklanırsa
+        resetButton.addEventListener("click", function () {
+            // Formu bulun
+            var form = document.querySelector("form");
+
+            // Formu sıfırlayın (reset metodu)
+            form.reset();
+        });
+    });
+</script>

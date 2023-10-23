@@ -1,0 +1,322 @@
+﻿@using ApplicationCore.Entities;
+@using Infrastructure.Models;
+@using ApplicationCore.Enums;
+@model ExpenseRequestModel
+@{
+    ViewData["Title"] = "Submit Expense Request";
+    var lst = ViewBag.ExpenseList as IEnumerable<ExpenseType>;
+    //var currency = ViewBag.ExpenseList as IEnumerable<CurrencyType>;
+}
+
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+else if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+
+<section class="section">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title">@ViewData["Title"]</h1>
+                    <!-- Horizontal Form -->
+                    <form asp-action="CreateExpense" method="post" enctype="multipart/form-data">
+                        @*<div asp-validation-summary="ModelOnly" class="text-danger"></div>*@
+                        <div class="row mb-3">
+                            <label asp-for="ExpenseType" class="col-sm-2 col-form-label">Expense Type</label>
+                            <div class="col-sm-10">
+                                <select id="expenseType" asp-for="ExpenseType" class="form-control" required>
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var expenseType in lst)
+                                    {
+                                        <option value="@expenseType">@expenseType.ToString().Replace("_", " ")</option>
+                                    }
+                                </select>
+                            </div>
+                            <span asp-validation-for="ExpenseType" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label" asp-for="Expense">Expense</label>
+                            <div class="col-sm-10">
+                                <input asp-for="Expense" id="expenseInput" class="form-control" min="0" step="0.01" required type="number" pattern="[0-9]+([\.,][0-9]+)?" title="Enter a valid number with optional decimal point (e.g., 1000 or 1000.50)">
+                            </div>
+                            <span asp-validation-for="Expense" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="currencySelect" asp-for="Currency" class="col-sm-2 col-form-label">Currency</label>
+                            <div class="col-sm-10">
+                                <select id="currencySelect" asp-for="Currency" class="form-control" required></select>
+                            </div>
+                            <span asp-validation-for="Currency" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label asp-for="Document" class="col-sm-2 col-form-label">Choose a file</label>
+                            <div class="col-sm-10">
+                                <input asp-for="Document" type="file" class="form-control-file">
+                            </div>
+                            <span asp-validation-for="Document" class="text-danger"></span>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                        </div>
+                        <div class="text-center mt-4">
+                            @if (ViewBag.ExpenseAlreadyCreated != null)
+                            {
+                                <span class="alert alert-danger">@ViewBag.ExpenseAlreadyCreated</span>
+                            }
+                        </div>
+                    </form><!-- End Horizontal Form -->
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+
+
+
+
+<script>
+    window.onload = function () {
+
+
+        var myHeaders = new Headers();
+        myHeaders.append("apikey", "IFXKFmS52a04sdQcTfNdAH0lZ5AroObA");
+
+        var requestOptions = {
+            method: 'GET',
+            redirect: 'follow',
+            headers: myHeaders
+        };
+
+        fetch("https://api.apilayer.com/fixer/symbols", requestOptions)
+            .then(response => response.json())
+            .then(result => {
+                var currencySelect = document.getElementById('currencySelect');
+                var symbols = result.symbols;
+
+                // Sembollerin dropdown listesine eklenmesi
+                for (var symbol in symbols) {
+                    var option = document.createElement('option');
+                    option.value = symbol;
+                    option.textContent = symbol + ' - ' + symbols[symbol];
+                    currencySelect.appendChild(option);
+                }
+
+                // Dropdown listesi değiştikçe dönüşüm yapılması
+                currencySelect.addEventListener('change', function () {
+                    calculateTotal(); // Dönüşüm yapıldığında toplamı hesapla
+                });
+
+                // Harcama miktarı değiştikçe toplamı hesapla
+                document.getElementById('expenseInput').addEventListener('input', function () {
+                    calculateTotal();
+                });
+            })
+            .catch(error => console.log('error', error));
+
+        // Toplamı hesapla ve input alanına yaz
+        function calculateTotal() {
+            var selectedSymbol = document.getElementById('currencySelect').value;
+            var expenseAmount = parseFloat(document.getElementById('expenseInput').value);
+
+            if (!isNaN(expenseAmount)) {
+                fetch("https://api.apilayer.com/fixer/convert?to=try&from=" + selectedSymbol + "&amount=" + expenseAmount, requestOptions)
+                    .then(response => response.json())
+                    .then(result => {
+                        var totalAmountInput = document.getElementById('totalAmountInput');
+
+                        var totalAmount = (result.result) /*+ " TRY"*/;
+                        var formattedAmount = totalAmount.toLocaleString('tr-TR')
+                        totalAmountInput.value = totalAmount;
+
+                        //var formattedInput = document.getElementById('formattedInput');
+                        //var totalAmountInput = document.getElementById('totalAmountInput');
+                        //var totalAmountInput = totalAmountInput.value;
+                        //formattedInput.value = totalAmountInput;
+
+
+
+                    })
+                    .catch(error => console.log('error', error));
+            } else {
+                // Harcama miktarı geçerli bir sayı değilse, input alanını temizle
+                var totalAmountInput = document.getElementById('totalAmountInput');
+                totalAmountInput.value = "";
+            }
+        }
+        var expenseInput = document.getElementById('expenseInput');
+
+        //expenseInput.addEventListener("input", function (e) {
+        //    var inputValue = e.target.value;
+        //    //var sanitizedValue = sanitizeInput(inputValue);
+        //    e.target.value = sanitizedValue;
+        //});
+
+        //function sanitizeInput(input) {
+        //    return input.replace(/\D/g, ''); // Sadece rakamları kabul et
+        //}
+
+
+
+
+//        var currencySelect = document.getElementById('currencySelect');
+//var selectedCurrency = currencySelect.value;
+
+//var expenseSelect = document.getElementById('expenseType');
+//var selectedExpense = expenseSelect.value;
+
+//var expenseAmountInput = document.getElementById('expenseInput');
+//var expenseAmount = expenseAmountInput.value;
+
+//var formData = new FormData();
+//formData.append('model.ExpenseType', selectedExpense);
+//formData.append('model.Expense', expenseAmount);
+//formData.append('model.Currency', selectedCurrency);
+//formData.append('formattedAmount', totalAmount);
+//console.log(formData);
+//var ajaxurl = "@*@Url.Action("CreateExpense", "Expense", new { area = "Personnel" })";*@
+//// AJAX isteği yap
+//$.ajax({
+
+//    type: 'POST',
+//    url: ajaxurl, // Controller ve Action adınıza göre güncelleyin
+//    data: formData, // FormData'yı kullanarak form verilerini gönderin
+//    contentType: false, // ContentType'ı false yapın
+//    processData: false, // Verileri işlemeyi devre dışı bırakın
+//    success: function (response) {
+//        console.log(response);
+//    },
+//    error: function (error) {
+//        console.error('Hata:', error);
+//    }
+//});
+        //var myHeaders = new Headers();
+        //myHeaders.append("apikey", "kCtZfa9tEtnICrgi1Tuc4bLA54W64pi4");
+
+        //var requestOptions = {
+        //    method: 'GET',
+        //    redirect: 'follow',
+        //    headers: myHeaders
+        //};
+
+        //// API'den sembollerin alınması
+        //var myHeaders = new Headers();
+        //myHeaders.append("apikey", "kCtZfa9tEtnICrgi1Tuc4bLA54W64pi4");
+
+        //var requestOptions = {
+        //    method: 'GET',
+        //    redirect: 'follow',
+        //    headers: myHeaders
+        //};
+
+        //var myHeaders = new Headers();
+        //myHeaders.append("apikey", "kCtZfa9tEtnICrgi1Tuc4bLA54W64pi4");
+
+        //var requestOptions = {
+        //    method: 'GET',
+        //    redirect: 'follow',
+        //    headers: myHeaders
+        //};
+
+        //fetch("https://api.apilayer.com/fixer/symbols", requestOptions)
+        //    .then(response => response.json())
+        //    .then(result => {
+        //        var currencySelect = document.getElementById('currencySelect');
+        //        var symbols = result.symbols;
+
+        //        // Sembollerin dropdown listesine eklenmesi
+        //        for (var symbol in symbols) {
+        //            var option = document.createElement('option');
+        //            option.value = symbol;
+        //            option.textContent = symbol + ' - ' + symbols[symbol];
+        //            currencySelect.appendChild(option);
+        //        }
+
+        //        // Dropdown listesi değiştikçe dönüşüm yapılması
+        //        currencySelect.addEventListener('change', function () {
+        //            calculateTotal(); // Dönüşüm yapıldığında toplamı hesapla
+        //        });
+
+        //        // Harcama miktarı değiştikçe toplamı hesapla
+        //        document.getElementById('expenseInput').addEventListener('input', function () {
+        //            calculateTotal();
+        //        });
+        //    })
+        //    .catch(error => console.log('error', error));
+
+        //// Toplamı hesapla ve div içine yaz
+        //function calculateTotal() {
+        //    var selectedSymbol = document.getElementById('currencySelect').value;
+        //    var expenseAmount = parseFloat(document.getElementById('expenseInput').value);
+
+        //    if (!isNaN(expenseAmount)) {
+        //        fetch("https://api.apilayer.com/fixer/convert?to=try&from=" + selectedSymbol + "&amount=" + expenseAmount, requestOptions)
+        //            .then(response => response.json())
+        //            .then(result => {
+        //                var resultDiv = document.getElementById('resultDiv');
+        //                var totalAmount = (result.result ).toFixed(2) + " TRY";
+        //                resultDiv.textContent = "Harcama Karşılığı: " + totalAmount;
+        //            })
+        //            .catch(error => console.log('error', error));
+        //    } else {
+        //        // Harcama miktarı geçerli bir sayı değilse, sonucu temizle
+        //        var resultDiv = document.getElementById('resultDiv');
+        //        resultDiv.textContent = "";
+        //    }
+        //}
+    };
+
+
+
+
+//    var totalAmountInput = document.getElementById('totalAmountInput');
+//function submitExpense() {
+//        var totalAmountInput = document.getElementById('totalAmountInput');
+//        totalAmount= totalAmountInput.value;
+
+//        var currencySelect = document.getElementById('currencySelect');
+//        var selectedCurrency = currencySelect.value;
+
+//        var expenseSelect = document.getElementById('expenseType');
+//        var selectedExpense = expenseSelect.value;
+
+//        var expenseAmountInput = document.getElementById('expenseInput');
+//        var expenseAmount = expenseAmountInput.value;
+
+//        var formData = new FormData();
+//        formData.append('model.ExpenseType', selectedExpense);
+//        formData.append('model.Expense', expenseAmount);
+//        formData.append('model.Currency', selectedCurrency);
+//        formData.append('model.formattedAmount', totalAmount);
+//        console.log(formData);
+
+        //var ajaxurl = "@*@Url.Action("CreateExpense", "Expense", new { area = "Personnel" })";*@
+
+//        // AJAX isteği yap
+//        $.ajax({
+//            type: 'POST',
+//            url: ajaxurl, // Controller ve Action adınıza göre güncelleyin
+//            data: formData, // FormData'yı kullanarak form verilerini gönderin
+//            contentType: false, // ContentType'ı false yapın
+//            processData: false, // Verileri işlemeyi devre dışı bırakın
+//            success: function (response) {
+//                console.log(response);
+//            },
+//            error: function (error) {
+//                console.error('Hata:', error);
+//            }
+//});
+
+</script>

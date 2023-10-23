@@ -1,0 +1,248 @@
+﻿@model ApplicationUser
+@{
+    ViewData["Title"] = "Home Page";
+}
+@inject Microsoft.AspNetCore.Identity.SignInManager<ApplicationUser> SignInManager
+
+@{
+    string backgroundColor = "";
+    string textColor = "";
+    if (User.IsInRole("CompanyManager"))
+    {
+        backgroundColor = "#daca77"; //"#77d4fc"; sarı
+        textColor = "#FFFFFF";
+    }
+    else
+    {
+        backgroundColor = "#77d4fc"; //"#dcdcaa";  mavi
+        textColor = "#FFFFFF";
+    }
+}
+
+<style>
+    /* Style to make the footer stay at the bottom of the page */
+    footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #f8f9fa; /* Adjust background color as needed */
+        z-index: 1;
+    }
+</style>
+
+<div id="targetElement" class="card mx-auto mt-5" style="width: 60rem; color: @textColor; background-color: @backgroundColor;">
+    <div class="card-header text-center" style="width: 50rem;">
+        <h1>
+            <strong>@Model.FirstName @Model.SecondName @Model.LastName @Model.SecondLastName</strong>
+        </h1>
+    </div>
+    <div class="row no-gutters">
+        <div class="col-md-4 d-flex justify-content-center align-items-center">
+            @if (Model.Photo != null)
+            {
+                <div class="container">
+                    <img id="imageFromBase64" class="rounded-circle" src="data:image/jpeg;base64,@Convert.ToBase64String(Model.Photo)" alt="User Image" width="150" height="180" style="max-width: 100%; max-height: 100%; margin-left: 80px;" />
+                </div>
+            }
+        </div>
+        <div class="col-md-8">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item"><strong>First Name:</strong> @Model.FirstName</li>
+                @{
+                    if (Model.SecondName != null)
+                    {
+                        <li class="list-group-item"><strong>Second Name:</strong> @Model.SecondName</li>
+                    }
+                }
+                <li class="list-group-item"><strong>Last Name:</strong> @Model.LastName</li>
+                @{
+                    if (Model.SecondLastName != null)
+                    {
+                        <li class="list-group-item"><strong>Second Last Name:</strong> @Model.SecondLastName</li>
+                    }
+                }
+                <li class="list-group-item"><strong>Occupation:</strong> @Model.Occupation</li>
+                <li class="list-group-item"><strong>Department:</strong> @Model.Department</li>
+                <li class="list-group-item"><strong>Email:</strong> @Model.Email</li>
+                <li class="list-group-item"><strong>Address:</strong> @Model.Address</li>
+                <li class="list-group-item"><strong>Phone Number:</strong> @Model.PhoneNumber</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+@* TODO: burasi duzeltilecek *@
+
+@* <script>
+    // Uyarıyı görüntülemek için bir işlev tanımlayın
+    function showLoginStatus() {
+        var loginStatus = document.getElementById("loginStatus");
+        loginStatus.classList.remove("d-none"); // Bootstrap 5'te gizli sınıfı kaldırın
+    }
+    // Sayfa yüklendiğinde uyarıyı göster
+    window.onload = function () {
+        showLoginStatus();
+        setTimeout(hideLoginStatus, 5000); // 5 saniye sonra otomatik olarak gizle
+    };
+    // Uyarıyı gizlemek için bir işlev tanımlayın
+    function hideLoginStatus() {
+        var loginStatus = document.getElementById("loginStatus");
+        loginStatus.classList.add("d-none"); // Bootstrap 5'te gizli sınıfı ekleyin
+    }
+</script> *@
+@if (SignInManager.IsSignedIn(User))
+{
+    <script>
+        // Check if the message has been shown before
+        var hasShownLoginStatus = sessionStorage.getItem("hasShownLoginStatus");
+
+        if (!hasShownLoginStatus) {
+            // Show the alert below the footer but visually above it
+            function showLoginStatus() {
+                var alertContainer = document.createElement("div");
+                alertContainer.classList.add("alert", "alert-primary", "alert-dismissible", "fade", "show", "position-fixed", "bottom-0", "end-0", "m-3", "z-index-high");
+                alertContainer.setAttribute("role", "alert");
+                alertContainer.style.zIndex = "9999"; // Ensure the alert is above other content
+                alertContainer.innerHTML = `
+                            <strong>
+        @{
+            if (User.IsInRole("CompanyManager"))
+            {
+                @:Company Manager
+            }
+            else
+            {
+                @:Personnel
+            }
+        }
+                            </strong> has been successfully logged in.
+                            <button type="button" class="btn-close" aria-label="Close" onclick="hideLoginStatus()"></button>
+                        `;
+                document.body.appendChild(alertContainer);
+
+                // Set a flag in session storage to indicate that the message has been shown
+                sessionStorage.setItem("hasShownLoginStatus", "true");
+
+                setTimeout(hideLoginStatus, 5000); // Auto close after 5 seconds
+            }
+
+            // Hide the alert
+            function hideLoginStatus() {
+                var alertContainer = document.querySelector(".alert.alert-primary.position-fixed");
+                if (alertContainer) {
+                    alertContainer.remove();
+                }
+            }
+
+            // Call the function to show the alert
+            showLoginStatus();
+        }
+    </script>
+}
+
+
+
+
+@* <script>
+    // Uyarıyı görüntülemek için bir işlev tanımlayın
+    function showLoginStatus() {
+        var loginStatus = document.getElementById("loginStatus");
+        loginStatus.classList.remove("d-none"); // Bootstrap 5'te gizli sınıfı kaldırın
+    }
+
+    function hideLoginStatus() {
+        var loginStatus = document.getElementById("loginStatus");
+        loginStatus.classList.add("d-none"); // Bootstrap 5'te gizli sınıfı ekleyin
+    }
+
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = cname + "=" + cvalue + "; " + expires + "; path=/";
+    }
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length); 
+            }
+        }
+        return "";
+    }
+
+    function checkIfFirstVisit() {
+        var visited = getCookie("visited");
+        if (visited === "") {
+            // Bu kullanıcının ilk ziyareti, uyarıyı göster
+            showLoginStatus();
+            setTimeout(hideLoginStatus, 5000); // 5 saniye sonra otomatik olarak gizle
+            // Ziyaret edildi olarak işaretlemek için çerezi ayarla
+            setCookie("visited", "true", 30); // 30 gün boyunca geçerli olacak bir çerez
+        }
+    }
+
+    // Sayfa yüklendiğinde ziyareti kontrol et
+    window.onload = function () {
+        checkIfFirstVisit();
+    };
+
+</script> *@
+
+<script>
+    // Uyarıyı görüntülemek için bir işlev tanımlayın
+    function showLoginStatus() {
+        console.log("showLoginStatus called"); // Add this line for debugging
+        var loginStatus = document.getElementById("loginStatus");
+        loginStatus.classList.remove("d-none"); // Remove the "d-none" class to display the message
+    }
+
+    // Uyarıyı gizlemek için bir işlev tanımlayın
+    function hideLoginStatus() {
+        var loginStatus = document.getElementById("loginStatus");
+        loginStatus.classList.add("d-none"); // Bootstrap 5'te gizli sınıfı ekleyin
+    }
+
+    // Cookie işlemleri için gerekli JavaScript kodunu buraya ekleyin
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000)); // Geçerlilik süresini hesapla
+        var expires = "expires=" + d.toUTCString();
+        document.cookie = cname + "=" + cvalue + "; " + expires + "; path=/"; // Çereziyi oluştur
+    }
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var cookieArray = decodedCookie.split(';');
+        for (var i = 0; i < cookieArray.length; i++) {
+            var cookie = cookieArray[i];
+            while (cookie.charAt(0) == ' ') {
+                cookie = cookie.substring(1);
+            }
+            if (cookie.indexOf(name) == 0) {
+                return cookie.substring(name.length, cookie.length);
+            }
+        }
+        return "";
+    }
+
+    // Sayfa yüklendiğinde ziyareti kontrol et
+    window.onload = function () {
+        var visited = getCookie("visited");
+        if (visited === "") {
+            // Bu kullanıcının ilk ziyareti, uyarıyı göster
+            showLoginStatus();
+            setTimeout(hideLoginStatus, 5000); // 5 saniye sonra otomatik olarak gizle
+            // Ziyaret edildi olarak işaretlemek için çerezi ayarla
+            setCookie("visited", "true", 30); // 30 gün boyunca geçerli olacak bir çerez
+        }
+    };
+</script>

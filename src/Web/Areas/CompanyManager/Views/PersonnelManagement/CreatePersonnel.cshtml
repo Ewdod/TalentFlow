@@ -1,0 +1,749 @@
+﻿@using Infrastructure.Models;
+@using ApplicationCore.Enums
+@using Microsoft.AspNetCore.Mvc.Rendering;
+@model PersonnelModel
+@{
+    ViewBag.Title = "Create Personnel";
+    var occupationList = ViewBag.OccupationValues as IEnumerable<Occupation>;
+    var departmentValues = ViewBag.DepartmentValues as IEnumerable<Department>;
+
+}
+<head>
+
+    <title>Place Autocomplete</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC2fVXZyo5GUVeiFgqfuRrY6Gvy8W-ZSdo&callback=initMap&libraries=places&v=weekly" defer></script>
+    <script>
+        // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+        function initMap() {
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 40.749933, lng: -73.98633 },
+                zoom: 13,
+                mapTypeControl: false,
+            });
+            const card = document.getElementById("pac-card");
+            const input = document.getElementById("pac-input");
+            const biasInputElement = document.getElementById("use-location-bias");
+            const strictBoundsInputElement =
+                document.getElementById("use-strict-bounds");
+            const options = {
+                fields: ["formatted_address", "geometry", "name"],
+                strictBounds: false,
+                types: ["establishment"],
+            };
+
+            map.controls[google.maps.ControlPosition.TOP_LEFT].push(card);
+
+            const autocomplete = new google.maps.places.Autocomplete(
+                input,
+                options
+            );
+
+            // Bind the map's bounds (viewport) property to the autocomplete object,
+            // so that the autocomplete requests use the current map bounds for the
+            // bounds option in the request.
+            autocomplete.bindTo("bounds", map);
+
+            const infowindow = new google.maps.InfoWindow();
+            const infowindowContent = document.getElementById("infowindow-content");
+
+            infowindow.setContent(infowindowContent);
+
+            const marker = new google.maps.Marker({
+                map,
+                anchorPoint: new google.maps.Point(0, -29),
+            });
+
+            autocomplete.addListener("place_changed", () => {
+                infowindow.close();
+                marker.setVisible(false);
+
+                const place = autocomplete.getPlace();
+
+                if (!place.geometry || !place.geometry.location) {
+                    // User entered the name of a Place that was not suggested and
+                    // pressed the Enter key, or the Place Details request failed.
+                    window.alert(
+                        "No details available for input: '" + place.name + "'"
+                    );
+                    return;
+                }
+
+                // If the place has a geometry, then present it on a map.
+                if (place.geometry.viewport) {
+                    map.fitBounds(place.geometry.viewport);
+                } else {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(17);
+                }
+
+                marker.setPosition(place.geometry.location);
+                marker.setVisible(true);
+                infowindowContent.children["place-name"].textContent = place.name;
+                infowindowContent.children["place-address"].textContent =
+                    place.formatted_address;
+                infowindow.open(map, marker);
+            });
+
+            // Sets a listener on a radio button to change the filter type on Places
+            // Autocomplete.
+            function setupClickListener(id, types) {
+                const radioButton = document.getElementById(id);
+
+                radioButton.addEventListener("click", () => {
+                    autocomplete.setTypes(types);
+                    input.value = "";
+                });
+            }
+
+            setupClickListener("changetype-all", []);
+            setupClickListener("changetype-address", ["address"]);
+            setupClickListener("changetype-establishment", ["establishment"]);
+            setupClickListener("changetype-geocode", ["geocode"]);
+            setupClickListener("changetype-cities", ["(cities)"]);
+            setupClickListener("changetype-regions", ["(regions)"]);
+            biasInputElement.addEventListener("change", () => {
+                if (biasInputElement.checked) {
+                    autocomplete.bindTo("bounds", map);
+                } else {
+                    // User wants to turn off location bias, so three things need to happen:
+                    // 1. Unbind from map
+                    // 2. Reset the bounds to whole world
+                    // 3. Uncheck the strict bounds checkbox UI (which also disables strict bounds)
+                    autocomplete.unbind("bounds");
+                    autocomplete.setBounds({
+                        east: 180,
+                        west: -180,
+                        north: 90,
+                        south: -90,
+                    });
+                    strictBoundsInputElement.checked = biasInputElement.checked;
+                }
+
+                input.value = "";
+            });
+            strictBoundsInputElement.addEventListener("change", () => {
+                autocomplete.setOptions({
+                    strictBounds: strictBoundsInputElement.checked,
+                });
+                if (strictBoundsInputElement.checked) {
+                    biasInputElement.checked = strictBoundsInputElement.checked;
+                    autocomplete.bindTo("bounds", map);
+                }
+
+                input.value = "";
+            });
+        }
+
+        window.initMap = initMap;
+    </script>
+    <style>
+        .card {
+            box-shadow: 0 20px 27px 0 rgb(0 0 0 / 5%);
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #fff;
+            background-clip: border-box;
+            border: 0 solid rgba(0, 0, 0, .125);
+            border-radius: 1rem;
+        }
+
+        .card-body {
+            -webkit-box-flex: 1;
+            -ms-flex: 1 1 auto;
+            flex: 1 1 auto;
+            padding: 1.5rem 1.5rem;
+        }
+
+        .card-header {
+            background: white;
+        }
+
+        body {
+            margin-top: 20px;
+            background-color: #eee;
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Düğmeyi bul
+            var button = document.getElementById("showAlertButton");
+
+            // Düğmeye tıklama olayını dinle
+            button.addEventListener("click", function () {
+                var nameInput = document.getElementById("nameInput").value;
+                var birthDateInput = document.getElementById("birthDateInput").value;
+                var startDateInput = document.getElementById("startDateInput").value;
+                var endDateInput = document.getElementById("endDateInput").value;
+
+                // Tüm giriş alanlarını kontrol et
+                if (nameInput.trim() === "" || birthDateInput.trim() === "" || startDateInput.trim() === "" || endDateInput.trim() === "") {
+                    // Eksik değerler varsa, uyarı gösterme
+                    return;
+                }
+
+                var message = '@TempData["Message"]';
+                if (message) {
+                    // Create a new div element to display the message
+                    var alertDiv = document.createElement("div");
+                    alertDiv.className = "alert alert-success";
+                    alertDiv.style.position = "fixed";
+                    alertDiv.style.bottom = "20px";
+                    alertDiv.style.right = "20px";
+                    alertDiv.style.zIndex = "1000";
+                    alertDiv.innerHTML = message;
+
+                    // Append the div to the document body
+                    document.body.appendChild(alertDiv);
+
+                    // Automatically remove the alert after a few seconds
+                    setTimeout(function () {
+                        alertDiv.style.display = "none";
+                    }, 5000); // Adjust the timeout (in milliseconds) as needed
+                }
+            });
+        });
+
+    </script>
+
+</head>
+
+<div class="container-fluid">
+    <div class="container">
+        <div class="col-lg-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="card-header text-center">
+                        <h1>
+                            <strong>Create New Personnel</strong>
+                        </h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form asp-action="CreatePersonnel" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4" @*style="height: 58.5vh;"*@>
+                        <div class="card-body">
+                            <h3 class="h6 mb-4" style="color: darkblue;"><strong>Personnel Information</strong></h3>
+                            <!-- Personal Information Kartı İçeriği -->
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-4" mb-4" @*style="height: 12vh;"*@>
+                                        <label asp-for="FirstName" class="form-label"><strong>First Name</strong></label>
+                                        <input asp-for="FirstName" type="text" class="form-control text-input" id="nameInput" required>
+                                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-4" mb-4" @*style="height: 11vh;"*@>
+                                        <label asp-for="SecondName" class="form-label"><strong>Second Name</strong></label>
+                                        <input asp-for="SecondName" type="text" class="form-control text-input" id="nameInput">
+                                        <span asp-validation-for="SecondName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-4" mb-4" @*style="height: 11vh;"*@>
+                                        <label asp-for="LastName" class="form-label"><strong>Last Name</strong></label>
+                                        <input asp-for="LastName" type="text" class="form-control text-input" id="nameInput" required>
+                                        <span asp-validation-for="LastName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-4" mb-4" @*style="height: 11vh;"*@>
+                                        <label asp-for="SecondLastName" class="form-label"><strong>Second Last Name</strong></label>
+                                        <input asp-for="SecondLastName" type="text" class="form-control text-input" id="nameInput">
+                                        <span asp-validation-for="SecondLastName" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-4">
+                                        <label asp-for="Gender" class="form-label"><strong>Gender</strong></label>
+                                        <select id="expenseType" asp-for="Gender" class="form-control" required>
+                                            <option value="">Seçiniz</option>
+                                            @foreach (var genderType in Enum.GetNames(typeof(Gender)).ToList())
+                                            {
+                                                if (genderType != "None")
+                                                {
+                                                    <option value="@genderType.ToString()">@genderType.Replace("_", " ")</option>
+                                                }
+
+                                            }
+                                        </select>
+                                        <span asp-validation-for="Gender" class="text-danger"></span>
+                                    </div>
+                                </div>
+
+                                <div class="col-lg-6">
+                                    <div class="mb-4">
+                                        <label asp-for="PhoneNumber" class="control-label"><strong>Phone Number : </strong></label>
+                                        <input asp-for="PhoneNumber" class="form-control mt-2" required/>
+                                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-4 mb-4" @*style="height: 11vh;"*@>
+                                        <label asp-for="BirthDate" class="form-label"><strong>Birth Date</strong></label>
+                                        <input asp-for="BirthDate" type="date" class="form-control" id="birthDateInput" required>
+                                        <span asp-validation-for="BirthDate" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="mb-4" mb-4" @*style="height: 11vh;"*@>
+                                        <label asp-for="BirthPlace" class="form-label"><strong>Birth Place</strong></label>
+                                        <input asp-for="BirthPlace" type="text" class="form-control text-input" id="textInput" required>
+                                        <span asp-validation-for="BirthPlace" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="mb-4" @*style="height: 11vh;"*@>
+
+                                        <label asp-for="IdentityNumber" class="form-label m-2 mb-2 mt-2"><strong>Identity No</strong></label>
+                                        <input asp-for="IdentityNumber" type="number" class="form-control" id="identityNumberInput" required>
+                                        <span asp-validation-for="IdentityNumber" class="text-danger" id="identityNumberValidation"></span>
+                                    </div>
+                                </div>
+                                @*<div asp-validation-summary="ModelOnly" class="text-danger"></div>*@
+                                <div class="col-lg-6">
+                                    <div class="mb-4" @*style="height: 11vh;"*@>
+                                        <label asp-for="Photo" class="control-label m-2 mb-2 mt-2"><strong>Photo : </strong></label>
+                                        <div class="custom-file">
+                                            <input asp-for="Photo" class="custom-file-input m-5 mb-2 mt-2" id="photo" name="photo" type="file" accept=".jpg, .jpeg, .png" />
+                                            <label class="custom-file-label" for="photo"></label>
+                                            <span asp-validation-for="Photo" class="text-danger m-3"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                @*<div class="form-group">
+                                    <label asp-for="Photo" class="control-label m-5 mb-1 mt-1"><strong>Photo : </strong></label>
+                                    <div class="custom-file">
+                                    <input asp-for="Photo" class="custom-file-input m-5 mb-2 mt-2" id="photo" name="photo" type="file" accept=".jpg, .jpeg, .png" />
+                                    <label class="custom-file-label" for="photo"></label>
+                                    <span asp-validation-for="Photo" class="text-danger m-3"></span>
+                                    </div>
+                                    </div>*@
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="col-lg-6">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="card mb-4">
+                                <div class="card-body">
+                                    <h3 class="h6 mb-4" style="color: darkblue;"><strong>Basic Information</strong></h3>
+                                    <!-- Basic Information Kartı İçeriği -->
+                                    <div class="row">
+                                        <div class="col-lg-6">
+                                            <div class="mb-3">
+                                                <label asp-for="StartDate" class="form-label"><strong>Start Date</strong></label>
+                                                <input asp-for="StartDate" type="date" class="form-control" id="startDateInput" min="" required>
+                                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="mb-3">
+                                                <label asp-for="EndDate" class="form-label"><strong>End Date</strong></label>
+                                                <input asp-for="EndDate" type="date" class="form-control" id="endDateInput" min="">
+                                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="mb-3">
+                                                <label asp-for="CompanyName" class="form-label"><strong>Company Name</strong></label>
+                                                <input asp-for="CompanyName" type="text" class="form-control" placeholder="@ViewData["CompanyName"]" disabled>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="mb-3">
+                                                @*<label asp-for="Occupation" class="form-label"><strong>Occupation</strong></label>
+                                                    <input asp-for="Occupation" type="text" class="form-control text-input" required>
+                                                    <span asp-validation-for="Occupation" class="text-danger"></span>*@
+                                                <label asp-for="Occupation" class="form-label"><strong>Occupation</strong></label>
+                                                <select id="leave-type" asp-for="Occupation" class="form-control" required>
+                                                    <option value="">Seçiniz</option>
+                                                    @foreach (var occupation in occupationList)
+                                                    {
+                                                        <option value="@occupation">@occupation.ToString().Replace("_", " ")</option>
+                                                    }
+                                                </select>
+                                                <span asp-validation-for="Occupation" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="mb-3">
+                                                @*<label asp-for="Department" class="form-label"><strong>Department</strong></label>
+                                                    <input asp-for="Department" type="text" class="form-control text-input" required>
+                                                    <span asp-validation-for="Department" class="text-danger"></span>*@
+                                                <label asp-for="Department" class="form-label"><strong>Department</strong></label>
+                                                <select id="leave-type" asp-for="Department" class="form-control" required>
+                                                    <option value="">Seçiniz</option>
+                                                    @foreach (var department in departmentValues)
+                                                    {
+                                                        <option value="@department">@department.ToString().Replace("_", " ")</option>
+                                                    }
+                                                </select>
+                                                <span asp-validation-for="Department" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                            <div class="mb-3">
+                                                <label asp-for="Salary" class="form-label"><strong>Salary</strong></label>
+                                                <input asp-for="Salary" type="number" class="form-control" min="11402" max="999999" required>
+                                                <span asp-validation-for="Salary" class="text-danger"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12">
+                                <div class="card mb-4">
+                                    <div class="card-body">
+                                        <h3 class="h6 mb-4" style="color: darkblue;"><strong>Address Information</strong></h3>
+                                        <!-- Address Information Kartı İçeriği -->
+                                        <div class="row">
+                                            @* <div class="col-lg-6">
+                                                <div class="mb-3">
+                                                <label asp-for="Address" class="form-label"><strong>Address</strong></label>
+                                                <input asp-for="Address" type="text" class="form-control">
+                                                <span asp-validation-for="Address" class="text-danger"></span>
+                                                </div>
+                                                </div> *@
+                                            <div class="pac-card" id="pac-card">
+                                                <div id="pac-container">
+                                                    <div class="form-group">
+                                                        <label asp-for="Address" class="form-label"><strong>Address</strong></label>
+                                                        <input id="pac-input" asp-for="Address" type="text" class="form-control" placeholder="Enter a location" required />
+                                                        <span asp-validation-for="Address" class="text-danger"></span>
+                                                    </div>
+                                                </div>
+                                                <div id="map"></div>
+                                                <div id="infowindow-content">
+                                                    <span id="place-name" class="title"></span><br />
+                                                    <span id="place-address"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Buton -->
+                <div class="text-center mb-3">
+
+                    <button id="showAlertButton" type="submit" class="btn btn-primary">Create</button>
+                    <button type="reset" class="btn btn-secondary">Reset</button>
+
+                </div>
+
+                @if (ViewData["ErrorMessagee"] != null)
+                {
+                    <div class="alert alert-danger">
+                        @ViewData["ErrorMessagee"]
+                    </div>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    //document.addEventListener("DOMContentLoaded", function () {
+
+    //});
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var birthDateInput = document.getElementById("birthDateInput");
+        var startDateInput = document.getElementById("startDateInput");
+        var endDateInput = document.getElementById("endDateInput");
+
+        // Minimum değer hesapla (şu anki tarih - 65 yıl)
+        var currentDate = new Date();
+        var currentBirthDateMax = new Date();
+        currentBirthDateMax.setFullYear(currentDate.getFullYear() - 18);
+        currentDate.setFullYear(currentDate.getFullYear() - 65);
+
+        // Yıl, ay ve gün bilgilerini ayrı ayrı alın ve yyyy-mm-dd formatında bir dize oluşturun
+        var year = currentDate.getFullYear();
+        var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        var day = currentDate.getDate().toString().padStart(2, '0');
+        var minBirthDateValue = year + "-" + month + "-" + day;
+
+        var yearMax = currentBirthDateMax.getFullYear();
+        var monthMax = (currentBirthDateMax.getMonth() + 1).toString().padStart(2, '0');
+        var dayMax = currentBirthDateMax.getDate().toString().padStart(2, '0');
+        var maxBirthDateValue = yearMax + "-" + monthMax + "-" + dayMax;
+
+        // Minimum değeri ata
+        birthDateInput.min = minBirthDateValue;
+        birthDateInput.max = maxBirthDateValue;
+        birthDateInput.value = minBirthDateValue;
+
+        birthDateInput.addEventListener("input", function () {
+            // Birth Date girişinin değerini alın
+            var birthDate = new Date(birthDateInput.value);
+
+            // Birth Date değerine 18 yıl ekleyin
+            birthDate.setFullYear(birthDate.getFullYear() + 18);
+
+            // Yıl, ay ve gün bilgilerini ayrı ayrı alın ve yyyy-mm-dd formatında bir dize oluşturun
+            var startYear = birthDate.getFullYear();
+            var startMonth = (birthDate.getMonth() + 1).toString().padStart(2, '0');
+            var startDay = birthDate.getDate().toString().padStart(2, '0');
+            var newStartDateValue = startYear + "-" + startMonth + "-" + startDay;
+
+            // Start Date girişine yeni değeri ata
+            startDateInput.value = newStartDateValue;
+
+            // Start Date girişinin minimum değeri değiştir
+            startDateInput.min = newStartDateValue;
+
+        });
+        startDateInput.addEventListener("input", function () {
+            var endYear = startDateInput.getFullYear();
+            var endMonth = (startDateInput.getMonth() + 1).toString().padStart(2, '0');
+            var endDay = startDateInput.getDate().toString().padStart(2, '0');
+            var newEndDateValue = endYear + "-" + endMonth + "-" + endDay;
+            // End Date girişinin minimum değerini değiştir
+            endDateInput.value = newEndDateValue;
+            endDateInput.min = newEndDateValue;
+        });
+        var textInputs = document.querySelectorAll(".text-input");
+
+        textInputs.forEach(function (textInput) {
+            textInput.addEventListener("input", function (e) {
+                var inputValue = e.target.value;
+                var sanitizedValue = sanitizeInput(inputValue);
+                e.target.value = sanitizedValue;
+            });
+        });
+
+        //function sanitizeInput(input) {
+        //    // Sadece belirli harf ve karakterleri kabul etmek için bir regex kullanabilirsiniz.
+        //    // Bu örnekte sadece A-Z ve a-z harf karakterleri kabul ediliyor.
+        //    return input.replace(/[^a-zA-Z' ']/g, '').replace(/\s+/g, ' '); // tek bosluga ve sadece harflere izin var
+        //}
+        //nameInput.addEventListener("input", function () {
+        //    var nameInputs = document.querySelectorAll(".text-input");
+
+        //    nameInputs.forEach(function (nameInput) {
+        //        nameInput.addEventListener("input", function (e) {
+        //            var inputValue = e.target.value;
+        //            var sanitizedValue = sanitizenameInput(inputValue);
+        //            e.target.value = sanitizedValue;
+        //        });
+        //    });
+
+        //    function sanitizenameInput(input) {
+        //        // Sadece belirli harf ve karakterleri kabul etmek için bir regex kullanabilirsiniz.
+        //        // Bu örnekte sadece A-Z ve a-z harf karakterleri kabul ediliyor.
+        //        return input.replace(/[^a-zA-Z]/g, '');
+        //    }
+
+        //});
+        function sanitizeInput(input) {
+            // Sadece belirli harf ve karakterleri kabul etmek için bir regex kullanabilirsiniz.
+            // Bu örnekte sadece A-Z, a-z ve Türkçe karakterleri kabul ediliyor.
+            return input.replace(/[^a-zA-ZğüşıöçĞÜŞİÖÇ' ']/g, '').replace(/\s+/g, ' '); // tek boşluğa ve sadece harflere ve Türkçe karakterlere izin veriliyor
+        }
+
+        nameInput.addEventListener("input", function () {
+            var nameInputs = document.querySelectorAll(".text-input");
+
+            nameInputs.forEach(function (nameInput) {
+                nameInput.addEventListener("input", function (e) {
+                    var inputValue = e.target.value;
+                    var sanitizedValue = sanitizeInput(inputValue);
+                    e.target.value = sanitizedValue;
+                });
+            });
+        });
+    });
+
+    //document.addEventListener("DOMContentLoaded", function () {
+    //    var birthDateInput = document.getElementById("birthDateInput");
+    //    var startDateInput = document.getElementById("startDateInput");
+    //    var endDateInput = document.getElementById("endDateInput");
+
+    //    // Minimum değer hesapla (şu anki tarih - 57 yıl)
+    //    var currentDate = new Date();
+    //    currentDate.setFullYear(currentDate.getFullYear() - 47);
+
+    //    // Yıl, ay ve gün bilgilerini ayrı ayrı alın ve yyyy-mm-dd formatında bir dize oluşturun
+    //    var year = currentDate.getFullYear();
+    //    var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    //    var day = currentDate.getDate().toString().padStart(2, '0');
+    //    var startStartDateValue = year + "-" + month + "-" + day;
+
+    //    // Başlangıç değerini ata
+    //    startDateInput.value = startStartDateValue;
+    //});
+    document.addEventListener("DOMContentLoaded", function () {
+        var startDateInput = document.getElementById("startDateInput");
+        var endDateInput = document.getElementById("endDateInput");
+
+        // Minimum değer hesapla (şu anki tarih - 57 yıl)
+        var currentDate = new Date();
+        currentDate.setFullYear(currentDate.getFullYear() - 47);
+
+        // Yıl, ay ve gün bilgilerini ayrı ayrı alın ve yyyy-mm-dd formatında bir dize oluşturun
+        var year = currentDate.getFullYear();
+        var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        var day = currentDate.getDate().toString().padStart(2, '0');
+        var startStartDateValue = year + "-" + month + "-" + day;
+
+        // Başlangıç değerini ata
+        startDateInput.value = "";
+
+        startDateInput.addEventListener("input", function () {
+            // Start Date girişinin değerini alın
+            var startDate = new Date(startDateInput.value);
+            var enddateMax = new Date(startDateInput.value);
+            enddateMax.setDate(enddateMax.getDate() + 1);
+            // Start Date değerine 55 yıl ekleyin
+            startDate.setFullYear(startDate.getFullYear() + 55);
+            var endYearMax = enddateMax.getFullYear();
+            var endMonthMax = (enddateMax.getMonth() + 1).toString().padStart(2, '0');
+            var endDayMax = enddateMax.getDate().toString().padStart(2, '0');
+            var minEndDateValue = endYearMax + "-" + endMonthMax + "-" + endDayMax;
+
+
+            // Yıl, ay ve gün bilgilerini ayrı ayrı alın ve yyyy-mm-dd formatında bir dize oluşturun
+            var endYear = startDate.getFullYear();
+            var endMonth = (startDate.getMonth() + 1).toString().padStart(2, '0');
+            var endDay = startDate.getDate().toString().padStart(2, '0');
+            var maxEndDateValue = endYear + "-" + endMonth + "-" + endDay;
+
+            // End Date girişinin maksimum değerini ata
+            endDateInput.min = minEndDateValue;
+            endDateInput.max = maxEndDateValue;
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var identityNumberInput = document.getElementById("identityNumberInput");
+        var identityNumberValidation = document.getElementById("identityNumberValidation");
+
+        identityNumberInput.addEventListener("input", function () {
+            var identityNumber = identityNumberInput.value;
+
+            // Kimlik numarasının geçerli olup olmadığını kontrol eden işlev
+            var isValid = validateIdentityNumber(identityNumber);
+
+            if (isValid) {
+                identityNumberValidation.textContent = "";
+            } else {
+                identityNumberValidation.textContent = "Geçerli bir kimlik numarası giriniz.";
+            }
+        });
+
+        function validateIdentityNumber(identityNumber) {
+
+            // geleni her zaman String'e çevirelim!
+            identityNumber = String(identityNumber);
+
+            // tcno '0' karakteri ile başlayamaz!
+            if (identityNumber.substring(0, 1) === '0') {
+                return false;
+            }
+            // Tcno 11 karakter uzunluğunda olmalı!
+            if (identityNumber.length !== 11) {
+                return false;
+            }
+
+            /**
+                Aşağıdaki iki kontrol için toplamları hazır ediyoruz
+                - o anki karakteri sayıya dönüştür
+                - tek haneleri ayrıca topla (1,3,5,7,9)
+                - çift haneleri ayrıca topla (2,4,6,8)
+                - bütün haneleri ayrıca topla
+            **/
+            var ilkon_array = identityNumber.substr(0, 10).split('');
+            var ilkon_total = hane_tek = hane_cift = 0;
+
+            for (var i = j = 0; i < 9; ++i) {
+                j = parseInt(ilkon_array[i], 10);
+                if (i & 1) { // tek ise, tcnin çift haneleri toplanmalı!
+                    hane_cift += j;
+                } else {
+                    hane_tek += j;
+                }
+                ilkon_total += j;
+            }
+            /**
+                KONTROL 1:
+                1. 3. 5. 7. ve 9. hanelerin toplamının 7 katından,
+                2. 4. 6. ve 8. hanelerin toplamı çıkartıldığında,
+                elde edilen sonucun Mod10'u bize 10. haneyi verir
+            **/
+            if ((hane_tek * 7 - hane_cift) % 10 !== parseInt(identityNumber.substr(-2, 1), 10)) {
+                return false;
+            }
+            /**
+                KONTROL 2:
+                1. 2. 3. 4. 5. 6. 7. 8. 9. ve 10. hanelerin toplamından
+                elde edilen sonucun Mod10'u bize 11. haneyi vermelidir.
+                NOT: ilk 9 haneyi üstteki FOR döndüsünde zaten topladık!
+            **/
+            ilkon_total += parseInt(ilkon_array[9], 10);
+            if (ilkon_total % 10 !== parseInt(identityNumber.substr(-1), 10)) {
+                return false;
+            }
+            return true;
+        }
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        // Reset butonunu bulun
+        var resetButton = document.querySelector("button[type='reset']");
+
+        // Reset butonuna tıklanırsa
+        resetButton.addEventListener("click", function () {
+            // Formu bulun
+            var form = document.querySelector("form");
+
+            // Formu sıfırlayın (reset metodu)
+            form.reset();
+        });
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        var endDateInput = document.getElementById("endDateInput");
+
+        // Şu anki tarih ve saati alın
+        var currentDate = new Date();
+
+        // Yıl, ay ve gün bilgilerini ayrı ayrı alın ve yyyy-mm-dd formatında bir dize oluşturun
+        var year = currentDate.getFullYear();
+        var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        var day = currentDate.getDate().toString().padStart(2, '0');
+        var maxEndDateValue = year + "-" + month + "-" + day;
+
+        // End Date girişinin maksimum değerini ayarlayın
+        endDateInput.max = maxEndDateValue;
+    });
+
+</script>
+

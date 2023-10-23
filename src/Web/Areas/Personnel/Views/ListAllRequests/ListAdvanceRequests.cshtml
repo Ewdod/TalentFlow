@@ -1,0 +1,262 @@
+﻿@model Web.Areas.Personnel.Models.ListAllRequestsViewModel
+@using ApplicationCore.Entities;
+@using ApplicationCore.Enums;
+@using Web.Areas.CompanyManager.Models;
+@using Web.Areas.Personnel.Models;
+@using ApplicationCore.Constants
+
+@{
+    ViewBag.Title = "Requests";
+    int i = 0;
+    string currentStatus = ViewBag.Status;
+    string pageTitle = currentStatus == "Accepted" ? "Accepted Requests" :
+                      currentStatus == "Rejected" ? "Rejected Requests" :
+                      "Requests";
+    ViewBag.Title = pageTitle;
+}
+
+<style>
+    body {
+        margin-top: 20px;
+        background-color: #eee;
+    }
+
+    .project-list-table {
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+
+        .project-list-table tr {
+            background-color: #fff;
+        }
+
+    .table-nowrap td, .table-nowrap th {
+        white-space: nowrap;
+    }
+
+    .table-borderless > :not(caption) > * > * {
+        border-bottom-width: 0;
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 0.75rem 0.75rem;
+        background-color: var(--bs-table-bg);
+        border-bottom-width: 1px;
+        box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+    }
+
+    .avatar-sm {
+        height: 2rem;
+        width: 2rem;
+    }
+
+    .rounded-circle {
+        border-radius: 50% !important;
+    }
+
+    .me-2 {
+        margin-right: 0.5rem !important;
+    }
+
+    img, svg {
+        vertical-align: middle;
+    }
+
+    a {
+        color: #3b76e1;
+        text-decoration: none;
+    }
+
+    .badge-soft-danger {
+        color: #f56e6e !important;
+        background-color: rgba(245, 110, 110, .1);
+    }
+
+    .badge-soft-success {
+        color: #63ad6f !important;
+        background-color: rgba(99, 173, 111, .1);
+    }
+
+    .badge-soft-primary {
+        color: #3b76e1 !important;
+        background-color: rgba(59, 118, 225, .1);
+    }
+
+    .badge-soft-info {
+        color: #57c9eb !important;
+        background-color: rgba(87, 201, 235, .1);
+    }
+
+    .avatar-title {
+        align-items: center;
+        background-color: #3b76e1;
+        color: #fff;
+        display: flex;
+        font-weight: 500;
+        height: 100%;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(59, 118, 225, .25) !important;
+    }
+</style>
+
+<style>
+    .alert-message-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .alert-message {
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        max-width: 300px;
+        word-wrap: break-word;
+    }
+
+    .alert-success {
+        background-color: #63ad6f;
+        color: #fff;
+    }
+
+    .alert-danger {
+        background-color: #f56e6e;
+        color: #fff;
+    }
+</style>
+
+<div id="alertContainer" class="alert-message-container"></div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var currentStatus = "@currentStatus";
+
+        function updateList(requestType) {
+            var url;
+
+            if (requestType === "AdvanceRequests") {
+                url = '/Personnel/ListAllRequests/ListAdvanceRequests';
+            } else if (requestType === "ExpenseRequests") {
+                url = '/Personnel/ListAllRequests/ListExpenseRequests';
+            } else if (requestType === "LeaveRequests") {
+                url = '/Personnel/ListAllRequests/ListLeaveRequests';
+            } else {
+                url = '/Personnel/PersonnelRequestController/ListLeaveRequests';
+            }
+
+            $.get(url, function (data) {
+                $('.project-list-table tbody').empty().append(data);
+            });
+        }
+
+        $('.request-type-button').click(function () {
+            var requestType = $(this).data('request-type');
+            updateList(requestType);
+        });
+    });
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.0/css/boxicons.min.css"
+      integrity="sha512-pVCM5+SN2+qwj36KonHToF2p1oIvoU3bsqxphdOIWMYmgr4ZqD3t5DjKvvetKhXGc/ZG5REYTT6ltKfExEei/Q=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.3.45/css/materialdesignicons.css"
+      integrity="sha256-NAxhqDvtY0l4xn+YVa6WjAcmd94NNfttjNsDmNatFVc=" crossorigin="anonymous" />
+
+<div id="alertContainer" class="alert-message-container"></div>
+
+<div class="container">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <h5 class="card-title" id="AdvanceRequestTitle">
+                    Advance Requests <span class="text-muted fw-normal ms-2">(@Model.AdvanceRequests.Count())</span>
+                </h5>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-3">
+                <div>
+                    <a href="@Url.Action("ListLeaveRequests", "ListAllRequests")" class="btn btn-secondary">
+                        <i class="bx bx-calendar me-1"></i> Leave Requests
+                    </a>
+                </div>
+                <div>
+                    <a href="@Url.Action("ListAdvanceRequests", "ListAllRequests")" class="btn btn-primary">
+                        <i class="bx bx-calendar me-1"></i> Advance Requests
+                    </a>
+                </div>
+                <div>
+                    <a href="@Url.Action("ListExpenseRequests", "ListAllRequests")" class="btn btn-dark">
+                        <i class="bx bx-calendar me-1"></i> Expense Requests
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="">
+                <div class="table-responsive">
+                    <table class="table project-list-table table-nowrap align-middle table-borderless">
+                        <thead>
+                            <tr>
+                                <th scope="col">No</th>
+                                <th scope="col">Request Type</th>
+                                <th scope="col">Personnel Name</th>
+                                <th scope="col">Request Date</th>
+                                <th scope="col">Response Date</th>
+                                <th scope="col">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.AdvanceRequests != null)
+                            {
+                                i = 0;
+                                @foreach (var item in Model.AdvanceRequests)
+                                {
+                                    <tr>
+                                        <th scope="row" class="ps-4">
+                                            <div class="form-check font-size-16">@(++i)</div>
+                                        </th>
+                                        <td>Advance Request</td>
+                                        <td>@item.FirstName @item.LastName</td>
+                                        <td>@item.RequestDate.Date.ToString("dd.MM.yyyy")</td>
+                                        <td>@item.ResponseDate
+                                        <td class="status-cell">
+                                            @if (item.Status == Status.Accepted)
+                                            {
+                                                <span class="badge badge-soft-success mb-0">Accepted</span>
+                                            }
+                                            else if (item.Status == Status.Rejected)
+                                            {
+                                                <span class="badge badge-soft-danger mb-0">Rejected</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-soft-primary mb-0">Pending</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4">No Advance requests found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,488 @@
+﻿@using ApplicationCore.Entities;
+@using Infrastructure.Models;
+@using ApplicationCore.Enums;
+@model LeaveRequestModel
+@{
+    ViewData["Title"] = "Submit Leave Request";
+    var lst = ViewBag.LeaveList as IEnumerable<LeaveType>;
+}
+
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">@TempData["Message"]</div>
+}
+
+<section class="section">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title">@ViewData["Title"]</h1>
+                    <!-- Horizontal Form -->
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        <div class="row mb-3">
+                            <label asp-for="LeaveType" class="col-sm-2 col-form-label">Leave Type</label>
+                            <div class="col-sm-10">
+                                <select id="leaveType" asp-for="LeaveType" class="form-control" required>
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var leaveType in lst)
+                                    {
+                                        <option value="@leaveType">@leaveType.ToString().Replace("_", " ")</option>
+                                    }
+                                </select>
+                            </div>
+                            <span asp-validation-for="LeaveType" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label asp-for="StartDate" class="col-sm-2 col-form-label">Start Date</label>
+                            <div class="col-sm-10">
+                                <input id="startDateInput" asp-for="StartDate" type="date" class="form-control" min="" max="" required>
+                            </div>
+                            <span asp-validation-for="StartDate" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label asp-for="EndDate" class="col-sm-2 col-form-label">End Date</label>
+                            <div class="col-sm-10">
+                                <input id="endDateInput" asp-for="EndDate" type="date" min="" class="form-control" max="" required>
+                            </div>
+                            <span asp-validation-for="EndDate" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <label asp-for="Document" class="col-sm-2 col-form-label">Choose a file</label>
+                            <div class="col-sm-10">
+                                <input asp-for="Document" type="file" class="form-control-file" accept=".pdf, .jpeg, .jpg, .png">
+                            </div>
+                            <span asp-validation-for="Document" class="text-danger"></span>
+                        </div>
+                        @*@if (TempData["DocumentError"] != null)
+                            {
+                               <span class="alert alert-danger">@TempData["DocumentError"]</span>
+                            }*@
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            @if (ViewBag.LeaveRequestError != null)
+                            {
+                                <span class="alert alert-danger">@ViewBag.LeaveRequestError</span>
+                            }
+                            @if (ViewBag.AnnualLeaveAllowanceError != null)
+                            {
+                                <span class="alert alert-danger">@ViewBag.AnnualLeaveAllowanceError</span>
+                            }
+                        </div>
+                    </form><!-- End Horizontal Form -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var startDateInput = document.getElementById("startDateInput");
+        var endDateInput = document.getElementById("endDateInput");
+        var leaveType = document.getElementById("leaveType");
+        endDateInput.disabled = true;
+
+
+        var currentDate = new Date();
+        currentDate.setDate(currentDate.getDate() + 1);
+
+        var year = currentDate.getFullYear();
+        var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        var day = currentDate.getDate().toString().padStart(2, '0');
+        var startStartDateValue = year + "-" + month + "-" + day;
+        startDateInput.setAttribute("min", startStartDateValue);
+
+        // startDateInput.value = startStartDateValue;
+        leaveType.addEventListener("change", function () {
+            var leaveType = document.getElementById("leaveType").value;
+            var startMaxDate = new Date();
+            var startMinDate = new Date();
+            if (leaveType == "Annual_Leave") {
+
+                startMaxDate.setDate(startMaxDate.getDate() + 30);
+                var year = startMaxDate.getFullYear();
+                var month = (startMaxDate.getMonth() + 1).toString().padStart(2, "0");
+                var day = startMaxDate.getDate().toString().padStart(2, "0");
+                var maxDateStr = year + "-" + month + "-" + day;
+
+                startMinDate.setDate(startMinDate.getDate() + 1);
+                let yearMin = startMinDate.getFullYear();
+                let monthMin = (startMinDate.getMonth() + 1).toString().padStart(2, "0");
+                let dayMin = startMinDate.getDate().toString().padStart(2, "0");
+                let minDateStr = yearMin + "-" + monthMin + "-" + dayMin;
+                startDateInput.setAttribute("min", minDateStr);
+
+                startDateInput.setAttribute("max", maxDateStr);
+            }
+            else if (leaveType == "Paternity_Leave") {
+                startMaxDate.setDate(startMaxDate.getDate() + 7);
+                startMinDate.setDate(startMinDate.getDate() - 7);
+                let yearMin = startMinDate.getFullYear();
+                let monthMin = (startMinDate.getMonth() + 1).toString().padStart(2, "0");
+                let dayMin = startMinDate.getDate().toString().padStart(2, "0");
+                let minDateStr = yearMin + "-" + monthMin + "-" + dayMin;
+                var year = startMaxDate.getFullYear();
+                var month = (startMaxDate.getMonth() + 1).toString().padStart(2, "0");
+                var day = startMaxDate.getDate().toString().padStart(2, "0");
+                var maxDateStr = year + "-" + month + "-" + day;
+
+                startDateInput.setAttribute("min", minDateStr);
+
+                startDateInput.setAttribute("max", maxDateStr);
+            }
+            else if (leaveType == "Maternity_Leave") {
+                startMaxDate.setDate(startMaxDate.getDate() + 7);
+                startMinDate.setDate(startMinDate.getDate() - 7);
+                let yearMin = startMinDate.getFullYear();
+                let monthMin = (startMinDate.getMonth() + 1).toString().padStart(2, "0");
+                let dayMin = startMinDate.getDate().toString().padStart(2, "0");
+                let minDateStr = yearMin + "-" + monthMin + "-" + dayMin;
+                var year = startMaxDate.getFullYear();
+                var month = (startMaxDate.getMonth() + 1).toString().padStart(2, "0");
+                var day = startMaxDate.getDate().toString().padStart(2, "0");
+                var maxDateStr = year + "-" + month + "-" + day;
+                startDateInput.setAttribute("min", minDateStr);
+                startDateInput.setAttribute("max", maxDateStr);
+            }
+            else if (leaveType == "Bereavement_Leave") {
+                startMaxDate.setDate(startMaxDate.getDate() + 3);
+                var year = startMaxDate.getFullYear();
+                var month = (startMaxDate.getMonth() + 1).toString().padStart(2, "0");
+                var day = startMaxDate.getDate().toString().padStart(2, "0");
+                var maxDateStr = year + "-" + month + "-" + day;
+
+                startMinDate.setDate(startMinDate.getDate() + 1);
+                let yearMin = startMinDate.getFullYear();
+                let monthMin = (startMinDate.getMonth() + 1).toString().padStart(2, "0");
+                let dayMin = startMinDate.getDate().toString().padStart(2, "0");
+                let minDateStr = yearMin + "-" + monthMin + "-" + dayMin;
+                startDateInput.setAttribute("min", minDateStr);
+
+                startDateInput.setAttribute("max", maxDateStr);
+            }
+            else if (leaveType == "Marriage_Leave") {
+                startMaxDate.setDate(startMaxDate.getDate() + 3);
+                var year = startMaxDate.getFullYear();
+                var month = (startMaxDate.getMonth() + 1).toString().padStart(2, "0");
+                var day = startMaxDate.getDate().toString().padStart(2, "0");
+                var maxDateStr = year + "-" + month + "-" + day;
+
+                startMinDate.setDate(startMinDate.getDate() + 1);
+                let yearMin = startMinDate.getFullYear();
+                let monthMin = (startMinDate.getMonth() + 1).toString().padStart(2, "0");
+                let dayMin = startMinDate.getDate().toString().padStart(2, "0");
+                let minDateStr = yearMin + "-" + monthMin + "-" + dayMin;
+                startDateInput.setAttribute("min", minDateStr);
+
+                startDateInput.setAttribute("max", maxDateStr);
+            }
+            else if (leaveType == "Companion_Leave") {
+                startMaxDate.setDate(startMaxDate.getDate() + 3);
+                var year = startMaxDate.getFullYear();
+                var month = (startMaxDate.getMonth() + 1).toString().padStart(2, "0");
+                var day = startMaxDate.getDate().toString().padStart(2, "0");
+                var maxDateStr = year + "-" + month + "-" + day;
+
+                startMinDate.setDate(startMinDate.getDate() + 1);
+                let yearMin = startMinDate.getFullYear();
+                let monthMin = (startMinDate.getMonth() + 1).toString().padStart(2, "0");
+                let dayMin = startMinDate.getDate().toString().padStart(2, "0");
+                let minDateStr = yearMin + "-" + monthMin + "-" + dayMin;
+                startDateInput.setAttribute("min", minDateStr);
+
+                startDateInput.setAttribute("max", maxDateStr);
+            }
+            startDateInput.value = "";
+            endDateInput.disabled = true;
+        });
+        startDateInput.addEventListener("input", function () {
+
+            var selectedStartDate = new Date(startDateInput.value);
+            var endDateInput = document.getElementById("endDateInput");
+            var leaveType = document.getElementById("leaveType").value;
+            // Seçilen başlangıç tarihinden 1 gün sonrasını alın
+            selectedStartDate.setDate(selectedStartDate.getDate() + 1);
+
+            var year = selectedStartDate.getFullYear();
+            var month = (selectedStartDate.getMonth() + 1).toString().padStart(2, '0');
+            var day = selectedStartDate.getDate().toString().padStart(2, '0');
+            var endStartDateValue = year + "-" + month + "-" + day;
+            endDateInput.setAttribute("min", endStartDateValue);
+            endDateInput.disabled = false;
+
+            if (leaveType == "Annual_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                let allowance = parseInt(@ViewData["AnnualLeave"]);
+                var currentDate = new Date(startDateInput.value);
+                currentDate.setDate(currentDate.getDate() + allowance);
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+                var startMaxDate = year + "-" + month + "-" + day + 30;
+                //startDateInput.setAttribute("max", startMaxDate);
+                endDateInput.setAttribute("max", endMaxDate);
+                if (allowance <= 0) {
+                    /*alert("You don't have enough allowance to be able to apply annual leave.")*/
+                    endDateInput.disabled = true;
+                    endDateInput.value = startDateInput;
+                }
+                else {
+                    endDateInput.disabled = false;
+                }
+            }
+            else if (leaveType == "Paternity_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                var currentDate = new Date(startDateInput.value);
+
+                currentDate.setDate(currentDate.getDate() + 5);
+
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+
+                endDateInput.setAttribute("max", endMaxDate);
+                endDateInput.setAttribute("min", endMaxDate);
+                endDateInput.value = endMaxDate;
+                endDateInput.readOnly = true;
+            }
+            else if (leaveType == "Maternity_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                //let allowance = parseInt(@ViewData["AnnualLeave"]);
+                var currentDate = new Date(startDateInput.value);
+                currentDate.setDate(currentDate.getDate() + 180);
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+                endDateInput.setAttribute("max", endMaxDate);
+                endDateInput.setAttribute("min", endMaxDate);
+                endDateInput.value = endMaxDate;
+                endDateInput.readOnly = true;
+            }
+            else if (leaveType == "Bereavement_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                //let allowance = parseInt(@ViewData["AnnualLeave"]);
+                var currentDate = new Date(startDateInput.value);
+                currentDate.setDate(currentDate.getDate() + 3);
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+                endDateInput.setAttribute("max", endMaxDate);
+                endDateInput.setAttribute("min", endMaxDate);
+                endDateInput.value = endMaxDate;
+                endDateInput.readOnly = true;
+            }
+            else if (leaveType == "Marriage_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                //let allowance = parseInt(@ViewData["AnnualLeave"]);
+                var currentDate = new Date(startDateInput.value);
+                currentDate.setDate(currentDate.getDate() + 3);
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+                endDateInput.setAttribute("max", endMaxDate);
+                endDateInput.setAttribute("min", endMaxDate);
+                endDateInput.value = endMaxDate;
+                endDateInput.readOnly = true;
+            }
+            else if (leaveType == "Companion_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                //let allowance = parseInt(@ViewData["AnnualLeave"]);
+                var currentDate = new Date(startDateInput.value);
+                currentDate.setDate(currentDate.getDate() + 3);
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+                endDateInput.setAttribute("max", endMaxDate);
+                endDateInput.setAttribute("min", endMaxDate);
+                endDateInput.value = endMaxDate;
+                endDateInput.readOnly = true;
+            }
+            else if (leaveType == "Free_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                //let allowance = parseInt(@ViewData["AnnualLeave"]);
+                var currentDate = new Date(startDateInput.value);
+                currentDate.setDate(currentDate.getDate() + 30);
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+                endDateInput.setAttribute("max", endMaxDate);
+                endDateInput.readOnly = false;
+            }
+            else if (leaveType == "Sick_Leave") {
+                var endDateInput = document.getElementById("endDateInput");
+                //let allowance = parseInt(@ViewData["AnnualLeave"]);
+                var currentDate = new Date(startDateInput.value);
+                currentDate.setDate(currentDate.getDate() + 20);
+
+                var sundays = [];
+                //currentDate.setDate(currentDate.getDate() + sundays.length());
+                let startDateValue = new Date(startDateInput.value);
+                /*var maxDateValue = new Date(endDateInput.getAttribute("max"));*/
+                if (startDateValue.getDay() !== 0) {
+                    while (startDateValue <= currentDate) {
+                        if (startDateValue.getDay() === 0) { // Pazar günü 0'dır.
+                            sundays.push(new Date(startDateValue)); // Pazar gününü ekleyin
+                        }
+                        startDateValue.setDate(startDateValue.getDate() + 1); // Bir sonraki günü işaretle
+                    }
+                    currentDate.setDate(currentDate.getDate() + sundays.length);
+                }
+
+                var year = currentDate.getFullYear();
+                var month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+                var day = currentDate.getDate().toString().padStart(2, '0');
+                var endMaxDate = year + "-" + month + "-" + day;
+                endDateInput.setAttribute("max", endMaxDate);
+                endDateInput.readOnly = false;
+            }
+
+        });
+    });
+    //leaveType.addEventListener("input", function () {
+
+    //});
+    window.onload = function () {
+        var startDateInput = document.getElementById("startDateInput");
+        var endDateInput = document.getElementById("endDateInput");
+        var leaveType = document.getElementById("leaveType");
+        startDateInput.value = "";
+        endDateInput.value = "";
+        leaveType.value = "";
+        endDateInput.disabled = true;
+    };
+    document.addEventListener("DOMContentLoaded", function () {
+        // Reset butonunu bulun
+        var resetButton = document.querySelector("button[type='reset']");
+
+        // Reset butonuna tıklanırsa
+        resetButton.addEventListener("click", function () {
+            // Formu bulun
+            var form = document.querySelector("form");
+
+            // Formu sıfırlayın (reset metodu)
+            form.reset();
+        });
+    });
+</script>
+
+

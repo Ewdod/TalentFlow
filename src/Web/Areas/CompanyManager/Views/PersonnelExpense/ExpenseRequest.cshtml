@@ -1,0 +1,428 @@
+﻿@using ApplicationCore.Entities;
+@using ApplicationCore.Enums;
+@using Web.Areas.CompanyManager.Models;
+@using Web.Areas.Personnel.Models;
+@using ApplicationCore.Constants
+@model List<ExpenseRequest>
+
+@{
+    ViewBag.Title = "Expense Requests";
+    int i = 0;
+    string currentStatus = ViewBag.Status;
+    string pageTitle = currentStatus == "Accepted" ? "Accepted Expense Requests" :
+                      currentStatus == "Rejected" ? "Rejected Expense Requests" :
+                      "Expense Requests";
+    ViewBag.Title = pageTitle;
+}
+
+@*<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>*@
+
+
+<style>
+    body {
+        margin-top: 20px;
+        background-color: #eee;
+    }
+
+    .project-list-table {
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+
+        .project-list-table tr {
+            background-color: #fff;
+        }
+
+    .table-nowrap td, .table-nowrap th {
+        white-space: nowrap;
+    }
+
+    .table-borderless > :not(caption) > * > * {
+        border-bottom-width: 0;
+    }
+
+    .table > :not(caption) > * > * {
+        padding: 0.75rem 0.75rem;
+        background-color: var(--bs-table-bg);
+        border-bottom-width: 1px;
+        box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+    }
+
+    .avatar-sm {
+        height: 2rem;
+        width: 2rem;
+    }
+
+    .rounded-circle {
+        border-radius: 50% !important;
+    }
+
+    .me-2 {
+        margin-right: 0.5rem !important;
+    }
+
+    img, svg {
+        vertical-align: middle;
+    }
+
+    a {
+        color: #3b76e1;
+        text-decoration: none;
+    }
+
+    .badge-soft-danger {
+        color: #f56e6e !important;
+        background-color: rgba(245, 110, 110, .1);
+    }
+
+    .badge-soft-success {
+        color: #63ad6f !important;
+        background-color: rgba(99, 173, 111, .1);
+    }
+
+    .badge-soft-primary {
+        color: #3b76e1 !important;
+        background-color: rgba(59, 118, 225, .1);
+    }
+
+    .badge-soft-info {
+        color: #57c9eb !important;
+        background-color: rgba(87, 201, 235, .1);
+    }
+
+    .avatar-title {
+        align-items: center;
+        background-color: #3b76e1;
+        color: #fff;
+        display: flex;
+        font-weight: 500;
+        height: 100%;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .bg-soft-primary {
+        background-color: rgba(59, 118, 225, .25) !important;
+    }
+</style>
+
+<style>
+    /* Stilize edilmiş bildirimler için stiller */
+    .alert-message-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .alert-message {
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: bold;
+        max-width: 300px;
+        word-wrap: break-word;
+    }
+
+    .alert-success {
+        background-color: #63ad6f;
+        color: #fff;
+    }
+
+    .alert-danger {
+        background-color: #f56e6e;
+        color: #fff;
+    }
+</style>
+
+<div id="alertContainer" class="alert-message-container"></div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize the status variable
+        var currentStatus = "@currentStatus";
+
+        // Function to update the page title based on the status
+        function updatePageTitle() {
+            document.title = currentStatus + " Expense Request";
+        }
+
+        // Function to add or replace the notification message
+        function addOrUpdateNotification(statusMessage) {
+            var existingNotification = $(".alert-message");
+
+            if (existingNotification.length > 0) {
+                // Replace the existing notification
+                existingNotification.text(statusMessage);
+            } else {
+                // Create a new div element for the notification
+                var notificationDiv = document.createElement("div");
+                notificationDiv.className = "alert-message alert-success";
+                notificationDiv.style.maxWidth = "300px"; // Max width of the notification
+                notificationDiv.innerHTML = statusMessage;
+
+                // Append the notification div to the container
+                $("#alertContainer").append(notificationDiv);
+            }
+
+            // Automatically remove the notification after a few seconds
+            setTimeout(function () {
+                $(".alert-message").remove();
+            }, 5000);
+        }
+
+        $(".update-status").click(function () {
+            var expenseRequestId = $(this).data("id");
+            var newStatus = $(this).data("status");
+
+            // Display a confirmation dialog
+            var confirmMessage = "Are you sure you want to proceed with this action?";
+            if (confirm(confirmMessage)) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("UpdateStatus", "PersonnelExpense")',
+                    data: { id: expenseRequestId, status: newStatus },
+                    success: function () {
+                        // Show a modal when the AJAX request is successful
+                        var statusMessage = "";
+                        if (newStatus === "Accepted") {
+                            statusMessage = "Expense request has been accepted.";
+                            // Update the status variable
+                            currentStatus = "Accepted";
+                        } else if (newStatus === "Rejected") {
+                            statusMessage = "Expense request has been rejected.";
+                            // Update the status variable
+                            currentStatus = "Rejected";
+                        }
+
+                        // Add or replace the notification message
+                        addOrUpdateNotification(statusMessage);
+
+                        // Update the page title based on the new status
+                        updatePageTitle();
+
+                        // Reload the page
+                        location.reload();
+                    },
+                    error: function () {
+                        // Show a modal in case of an error
+                        $("#modal-message").text("Error updating status.");
+                        $("#statusModal").modal("show");
+
+                        // Reload the page
+                        location.reload();
+                    }
+                });
+            }
+        });
+
+        // Hide the "Actions" column by default
+        if (currentStatus === "Accepted" || currentStatus === "Rejected") {
+            $("#actionsHeader").show();
+            $(".actions-cell").show();
+        } else {
+            $("#actionsHeader").hide();
+            $(".actions-cell").hide();
+        }
+    });
+    setTimeout(function () {
+        $(".alert-message").remove();
+    }, 5000); // 5 saniye (5000 milisaniye)
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.0/css/boxicons.min.css"
+      integrity="sha512-pVCM5+SN2+qwj36KonHToF2p1oIvoU3bsqxphdOIWMYmgr4ZqD3t5DjKvvetKhXGc/ZG5REYTT6ltKfExEei/Q=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.3.45/css/materialdesignicons.css"
+      integrity="sha256-NAxhqDvtY0l4xn+YVa6WjAcmd94NNfttjNsDmNatFVc=" crossorigin="anonymous" />
+
+
+<div id="alertContainer" class="alert-message-container"></div>
+
+<div class="container">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <h5 class="card-title" id="expenseRequestTitle">
+                    @pageTitle <span class="text-muted fw-normal ms-2">(@Model.Count)</span>
+                </h5>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-3">
+                <div>
+                    <a asp-area="CompanyManager" asp-controller="PersonnelExpense" asp-action="ListAcceptedExpenseRequests"
+                       class="btn btn-success"><i class="bx bx-check-circle me-1"></i> Accepted</a>
+                </div>
+                <div>
+                    <a asp-area="CompanyManager" asp-controller="PersonnelExpense" asp-action="ListRejectedExpenseRequests"
+                       class="btn btn-danger"><i class="bx bx-x-circle me-1"></i> Rejected</a>
+                </div>
+                <div>
+                    <a asp-area="CompanyManager" asp-controller="PersonnelExpense" asp-action="ExpenseRequest"
+                       class="btn btn-primary"><i class="bx bx-time me-1"></i> Pending</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="">
+                <div class="table-responsive">
+                    <table class="table project-list-table table-nowrap align-middle table-borderless">
+                        <thead>
+                            <tr>
+                                <th scope="col">No</th>
+                                <th scope="col">Expense Type</th>
+                                <th scope="col">Personnel Name</th>
+                                <th scope="col">Expense Amount</th>
+                                <th scope="col">Currency</th>
+                                <th scope="col">Request Date</th>
+                                @if (currentStatus == "Accepted" || currentStatus == "Rejected")
+                                {
+                                    <th scope="col">Response Date</th>
+                                }
+                                <th scope="col">Status</th>
+                                @if (currentStatus != "Accepted" && currentStatus != "Rejected")
+                                {
+                                    <th scope="col">Actions</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Any())
+                            {
+                                i = 0;
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <th scope="row" class="ps-4">
+                                            <div class="form-check font-size-16">@(++i)</div>
+                                        </th>
+                                        <td>@item.Type.ToString().Replace("_", " ")</td>
+                                        <td>@(item.FirstName + " " + (item.SecondFirstName == null ? "" : (item.SecondFirstName + " ")) + item.LastName + " " + (item.SecondLastName == null ? "" : item.SecondLastName))</td>
+                                        <td>@item.Expense</td>
+                                        <td>@item.Currency</td> <!-- Display "TR" for currency -->
+                                        <td>@item.RequestDate</td>
+                                        @if (currentStatus == "Accepted" || currentStatus == "Rejected")
+                                        {
+                                            <th scope="col">@item.ResponseDate</th>
+                                        }
+                                        <td class="status-cell">
+                                            @if (item.Status == Status.Accepted)
+                                            {
+                                                <span class="badge badge-soft-success mb-0">Accepted</span>
+                                            }
+                                            else if (item.Status == Status.Rejected)
+                                            {
+                                                <span class="badge badge-soft-danger mb-0">Rejected</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-soft-primary mb-0">Pending</span>
+                                            }
+                                        </td>
+                                        @if (currentStatus != "Accepted" && currentStatus != "Rejected")
+                                        {
+                                            <td>
+                                                <form method="post">
+                                                    <ul class="list-inline mb-0">
+                                                        @if (item.Status == Status.Pending)
+                                                        {
+                                                            <li class="list-inline-item">
+                                                                <a href="javascript:void(0);" class="px-2 text-danger update-status"
+                                                                   data-id="@item.Id" data-status="Rejected">
+                                                                    <i class="bx bx-x-circle font-size-18"></i>
+                                                                </a>
+                                                            </li>
+                                                            <li class="list-inline-item">
+                                                                <a href="javascript:void(0);" class="px-2 text-success update-status"
+                                                                   data-id="@item.Id" data-status="Accepted">
+                                                                    <i class="bx bx-check-circle font-size-18"></i>
+                                                                </a>
+                                                            </li>
+                                                            @if (item.DocumentPath != null)
+                                                            {
+                                                                <li class="list-inline-item">
+                                                                    <a href="@Url.Action("ShowPdf", "PersonnelRequest", new { expenseRequestId = item.Id })" target="_blank" class="px-2 text-warning">
+                                                                        <i class="bx bx-file-find font-size-18"></i>
+                                                                    </a>
+                                                                </li>
+                                                            }
+                                                        }
+                                                    </ul>
+                                                </form>
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="8">No expense requests found.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="pdf_container">
+</div>
+<div id="pdf_container">
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="pdfModal" tabindex="-1" aria-labelledby="pdfModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="pdfModalLabel">PDF Viewer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="embed-responsive embed-responsive-16by9">
+                    <iframe class="embed-responsive-item" id="pdfFrame" src="" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*<script src="~/pdf.js/pdf.min.js"></script>
+<script src="~/pdf.js/pdf.worker.min.js"></script>*@
+@*<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf_viewer.min.css" rel="stylesheet" type="text/css" />*@
+
+
+<script>
+    // Automatically remove the notification after a few seconds
+    setTimeout(function () {
+        $(".alert-message").remove();
+    }, 5000); // 5000 milisaniye yani 5 saniye
+
+    var pdfModal = new bootstrap.Modal(document.getElementById('pdfModal'));
+
+    document.querySelectorAll('[data-bs-toggle="modal"]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            var pdfUrl = e.target.getAttribute('data-pdfurl');
+            var pdfFrame = document.getElementById('pdfFrame');
+            pdfFrame.src = pdfUrl;
+            pdfModal.show();
+        });
+    });
+</script>
+
+
+
+

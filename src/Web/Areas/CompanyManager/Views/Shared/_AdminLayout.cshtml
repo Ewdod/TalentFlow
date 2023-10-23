@@ -1,0 +1,295 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <title>TalentFlow Human Resources Template</title>
+
+    <style>
+        /* Sidebar arka plan rengi ve metin rengi */
+        #sidebar {
+            background-color: #3F72AF;
+            color: #ffffff;
+        }
+
+        /* İcon renkleri */
+        .bi {
+            color: darkblue;
+        }
+
+        #components-nav {
+            padding-left: 10px;
+        }
+
+            #components-nav .nav-link {
+                margin-bottom: 1px;
+            }
+
+        #header {
+            background-color: white;
+        }
+
+        /* Profil dropdown menüsündeki başlık ve alt çizgi rengi */
+        .dropdown-menu.profile .dropdown-header,
+        .dropdown-menu.profile .dropdown-divider {
+            background-color: white;
+            color: #112D4E;
+        }
+
+        /* Profil dropdown menüsünün arka plan rengi */
+        .dropdown-menu.profile {
+            background-color: #3F72AF;
+        }
+
+            .dropdown-menu.profile a {
+                color: white;
+            }
+
+            .dropdown-menu.profile .bi {
+                color: white;
+            }
+
+        .sidebar-nav .nav-item li {
+            background-color: white;
+        }
+
+        /* Footer tasarımı */
+        #footer {
+            background-color: white;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        /* Ana içerik alanını, footer'ın yüksekliği kadar yukarı çekmek için margin-bottom ekliyoruz */
+        #main {
+            margin-bottom: 60px; /* Footer'ın yüksekliği kadar */
+        }
+    </style>
+
+    <meta content="" name="description">
+    <meta content="" name="keywords">
+
+    <!-- Favicons -->
+    <link href="~/company-manager/img/logofav.png" rel="icon">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="~/company-manager/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/company-manager/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="~/company-manager/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+    <link href="~/company-manager/vendor/quill/quill.snow.css" rel="stylesheet">
+    <link href="~/company-manager/vendor/quill/quill.bubble.css" rel="stylesheet">
+    <link href="~/company-manager/vendor/remixicon/remixicon.css" rel="stylesheet">
+    <link href="~/company-manager/vendor/simple-datatables/style.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.16.0/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="~/company-manager/css/style.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header id="header" class="header fixed-top d-flex align-items-center">
+
+        <div class="d-flex align-items-center justify-content-between">
+            <a class="logo d-flex align-items-center" asp-controller="MainPage" asp-action="Index">
+                <img src="~/company-manager/img/logo.png" alt="">
+            </a>
+            <i class="bi bi-list toggle-sidebar-btn"></i>
+        </div><!-- End Logo -->
+        <nav class="header-nav ms-auto">
+            <ul class="d-flex align-items-center">
+                <li class="nav-item dropdown pe-3">
+                    <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+                        <img class="rounded-circle" src="data:image/jpeg;base64,@ViewData["Photo"]" alt="User Image" width="36" height="36" style="max-width: 100%; max-height: 100%;" />
+                        <span class="d-none d-md-block dropdown-toggle ps-2">@ViewData["Person"]</span>
+                    </a><!-- End Profile Iamge Icon -->
+
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+                        <li class="dropdown-header">
+                            <h6>@ViewData["Person"]</h6>
+                            <span>@ViewData["Occupation"]</span>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="MainPage" asp-action="Index">
+                                <i class="bi bi-person"></i>
+                                <span>My Profile</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="MainPage" asp-action="Edit">
+                                <i class="bi bi-gear"></i>
+                                <span>Profile Edit</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="MainPage" asp-action="Details">
+                                <i class="bi bi-question-circle"></i>
+                                <span>Profile Details</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center" asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="MainPage" asp-action="ChangePassword">
+                                <i class="bi bi-lock-fill"></i>
+                                <span>Reset Password</span>
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        @*
+        <li>
+        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("LoginPage", "Home", new { area = "" })">
+        <button type="submit" class="nav-link btn btn-link text-dark">
+        <i class="bi bi-box-arrow-right"></i>
+        <span>Sign Out</span>
+        </button>
+        </form>
+        </li>*@
+                        <li>
+                            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("LoginPage", "Home", new { area = "" })">
+                                <button type="submit" class="nav-link btn btn-link text-white dropdown-item d-flex align-items-center">
+                                    <i class="bi bi-box-arrow-right text-white"></i>
+                                    <span class="text-white">Sign Out</span>
+                                </button>
+                            </form>
+                        </li>
+
+
+                    </ul><!-- End Profile Dropdown Items -->
+            </ul>
+
+        </nav><!-- End Icons Navigation -->
+
+    </header><!-- End Header -->
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+        <ul class="sidebar-nav" id="sidebar-nav">
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse">
+                    <i class="bi bi-person-circle"></i><span>Navigation</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="MainPage" asp-action="Index">
+                            <i class="bi bi-person"></i><span>My Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="MainPage" asp-action="Edit">
+                            <i class="bi bi-pencil"></i><span>Profile Edit</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="MainPage" asp-action="Details">
+                            <i class="bi bi-file-text"></i><span>Profile Details</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-people"></i><span>Personnel Management</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="PersonnelManagement" asp-action="ListPersonnel">
+                            <i class="bi bi-list"></i><span>Personnel List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="PersonnelManagement" asp-action="CreatePersonnel">
+                            <i class="bi bi-person-plus"></i><span>Create Personnel</span>
+                        </a>
+                    </li>
+                </ul>
+            </li><!-- End Forms Nav -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+                    <i class="bi bi-file-earmark-text"></i><span>Personnel Requests</span><i class="bi bi-chevron-down ms-auto"></i>
+                </a>
+                <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="PersonnelRequest" asp-action="LeaveRequest">
+                            <i class="bi bi-file-earmark-check"></i><span>Leave Requests</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="PersonnelExpense" asp-action="ExpenseRequest">
+                            <i class="bi bi-cash"></i><span>Expense Requests</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-route-id="@ViewData["Id"]" asp-area="CompanyManager" asp-controller="AdvancePaymentRequest" asp-action="AdvanceRequests">
+                            <i class="bi bi-currency-dollar"></i><span>Advance Payment Requests</span>
+                        </a>
+                    </li>
+                </ul>
+            </li><!-- End Tables Nav -->
+        </ul>
+    </aside><!-- End Sidebar-->
+    <!-- Main Content -->
+    <main id="main" class="main">
+        @RenderBody()
+    </main><!-- End #main -->
+    <!-- Footer -->
+    <footer id="footer" class="footer">
+        <div class="copyright">
+            &copy; Copyright <strong><span>TalentFlow Group</span></strong>. All Rights Reserved
+        </div>
+        <div class="credits">
+            Designed by <strong>TalentFlow Group</strong>
+        </div>
+    </footer><!-- End Footer -->
+    <!-- Vendor JS Files -->
+    <script src="~/company-manager/vendor/apexcharts/apexcharts.min.js"></script>
+    <script src="~/company-manager/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/company-manager/vendor/chart.js/chart.umd.js"></script>
+    <script src="~/company-manager/vendor/echarts/echarts.min.js"></script>
+    <script src="~/company-manager/vendor/quill/quill.min.js"></script>
+    <script src="~/company-manager/vendor/simple-datatables/simple-datatables.js"></script>
+    <script src="~/company-manager/vendor/tinymce/tinymce.min.js"></script>
+    <script src="~/company-manager/vendor/php-email-form/validate.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/additional-methods.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+    <!-- Template Main JS File -->
+    <script src="~/company-manager/js/main.js"></script>
+
+    @await RenderSectionAsync("Scripts", false)
+
+</body>
+
+</html>

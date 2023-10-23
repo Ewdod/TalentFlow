@@ -1,0 +1,461 @@
+﻿@using ApplicationCore.Entities;
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
+@model IEnumerable<ApplicationCore.Entities.Company>
+
+@{
+    ViewBag.Title = "Company List";
+    int i = 0;
+    var companyData = JsonSerializer.Serialize(Model);
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Company List</title>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+
+    <style>
+        body {
+            margin-top: 20px;
+            background-color: #eee;
+        }
+
+        .project-list-table {
+            border-collapse: separate;
+            border-spacing: 0 12px;
+        }
+
+            .project-list-table tr {
+                background-color: #fff;
+            }
+
+        .table-nowrap td, .table-nowrap th {
+            white-space: nowrap;
+        }
+
+        .table-borderless > :not(caption) > * > * {
+            border-bottom-width: 0;
+        }
+
+        .table > :not(caption) > * > * {
+            padding: 0.75rem 0.75rem;
+            background-color: var(--bs-table-bg);
+            border-bottom-width: 1px;
+            box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+        }
+
+        .avatar-sm {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+        }
+
+        .me-2 {
+            margin right: 0.5rem !important;
+        }
+
+        img, svg {
+            vertical-align: middle;
+        }
+
+        a {
+            color: #3b76e1;
+            text-decoration: none;
+        }
+
+        .badge-soft-danger {
+            color: #f56e6e !important;
+            background-color: rgba(245, 110, 110, .1);
+        }
+
+        .badge-soft-success {
+            color: #63ad6f !important;
+            background-color: rgba(99, 173, 111, .1);
+        }
+
+        .badge-soft-primary {
+            color: #3b76e1 !important;
+            background-color: rgba(59, 118, 225, .1);
+        }
+
+        .badge-soft-info {
+            color: #57c9eb !important;
+            background-color: rgba(87, 201, 235, .1);
+        }
+
+        .avatar-title {
+            align-items: center;
+            background-color: #3b76e1;
+            color: #fff;
+            display: flex;
+            font-weight: 500;
+            height: 100%;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .bg-soft-primary {
+            background-color: rgba(59, 118, 225, .25) !important;
+        }
+
+        .centered-image {
+            width: 100px; /* Resim genişliği */
+            height: 100px; /* Resim yüksekliği */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            border: 2px solid #ccc; /* Kenarlık kalınlığı ve rengi */
+            border-radius: 50%; /* Yuvarlak kenarlar */
+            overflow: hidden;
+        }
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.0/css/boxicons.min.css" integrity="sha512-pVCM5+SN2+qwj36KonHToF2p1oIvoU3bsqxphdOIWMYmgr4ZqD3t5DjKvvetKhXGc/ZG5REYTT6ltKfExEei/Q==" crossorigin="anonymous" referrerpolicy="no-referrer" / >
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/5.3.45/css/materialdesignicons.css" integrity="sha256-NAxhqDvtY0l4xn+YVa6WjAcmd94NNfttjNsDmNatFVc=" crossorigin="anonymous" / >
+    </style>
+</head>
+<body>
+
+
+
+    <div class="container">
+
+        <div class="row align-items-center">
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <h5 class="card-title">Company List <span class="text-muted fw-normal ms-2">(@Model.Count())</span></h5>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mb-3">
+                    <div>
+                        <a asp-area="Manager" asp-controller="ListAllCompanies" asp-action="ListAllCompanies" class="btn btn-success"><i class="bx bx-filter me-1"></i> Active</a>
+                    </div>
+                    <div>
+                        <a asp-area="Manager" asp-controller="ListAllCompanies" asp-action="ListAllCompanies" asp-route-showActive="false" class="btn btn-danger"><i class="bx bx-filter me-1"></i> Passive</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <input type="text" id="searchInput" placeholder="Search by Company Name" class="form-control" />
+            @*<button type="button" id="searchButton" class="btn btn-primary">Search</button>*@
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="">
+                    <div class="table-responsive">
+                        <table class="table project-list-table table-nowrap align-middle table-borderless">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="ps-4" style="width: 50px;">
+                                        <div class="form-check font-size-16">No</div>
+                                    </th>
+                                    <th scope="col">Company Name</th>
+                                    <th scope="col">Company Type</th>
+                                    <th scope="col">Tax Number</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody">
+                                @if (Model != null)
+                                {
+                                    @foreach (var company in Model)
+                                    {
+                                        <tr>
+                                            <th scope="row" class="ps-4">
+                                                <div class="form-check font-size-16">@(++i)</div>
+                                            </th>
+                                            <td>
+                                                <img src="data:image/png;base64,@Convert.ToBase64String(company.Logo)" alt="" class="avatar-sm rounded-circle me-2" />
+                                                <a class="text-body">
+
+                                                    @(company.CompanyName)
+                                                </a>
+                                            </td>
+                                            <td>@company.CompanyType</td>
+                                            <td>@company.TaxNumber</td>
+                                            <td>
+                                                <button type="button" class="btn btn-primary details-button" data-toggle="modal" data-target="#companyModal" data-company-name="@company.CompanyName" data-company-type="@company.CompanyType" data-tax-number="@company.TaxNumber" data-owner="@company.OwnerId" data-tax-company="@company.TaxCompany" data-logo="@Convert.ToBase64String(company.Logo)" data-phone-number="@company.PhoneNumber" data-address="@company.Address" data-email="@company.Email" data-employee-count="@company.EmployeeCount" data-foundation-year="@company.FoundationYear" data-contract-beginning-date="@company.ContractBeginningDate" data-contract-end-date="@company.ContractEndDate" data-status="@company.Status">
+                                                    Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6">No companies found.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bootstrap ve jQuery JS -->
+        <!-- Modal penceresini burada ekleyin -->
+        <div class="modal fade" id="companyModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Company Details</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <!-- Display the company logo here -->
+                        <img id="modalCompanyLogo" src="" alt="Company Logo" class="img-fluid company-logo centered-image" />
+                        <hr />
+                        <p><strong>Company Name:</strong> <span id="modalCompanyName"></span></p>
+                        <p><strong>Company Type:</strong> <span id="modalCompanyType"></span></p>
+                        <p><strong>Tax Number:</strong> <span id="modalTaxNumber"></span></p>
+                        <p><strong>Owner ID:</strong> <span id="modalOwner"></span></p>
+                        <p><strong>Tax Company:</strong> <span id="modalTaxCompany"></span></p>
+                        <p><strong>Phone Number:</strong> <span id="modalPhoneNumber"></span></p>
+                        <p><strong>Address:</strong> <span id="modalAddress"></span></p>
+                        <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+                        <p><strong>Employee Count:</strong> <span id="modalEmployeeCount"></span></p>
+                        <p><strong>Foundation Year:</strong> <span id="modalFoundationYear"></span></p>
+                        <p><strong>Contract Beginning Date:</strong> <span id="modalContractBeginningDate"></span></p>
+                        <p><strong>Contract End Date:</strong> <span id="modalContractEndDate"></span></p>
+                        <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function formatDate(dateString) {
+                const parts = dateString.split('.'); // "dd.MM.yyyy" biçimine sahip tarihi böler
+                if (parts.length === 3) {
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1] - 1, 10); // JavaScript ay indeksi 0'dan başlar
+                    const year = parseInt(parts[2], 10);
+                    const formattedDate = new Date(year, month, day); // Yeni bir tarih nesnesi oluştur
+                    if (!isNaN(formattedDate.getTime())) {
+                        // Geçerli bir tarihse biçimlendir ve döndür
+                        const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                        return formattedDate.toLocaleDateString('tr-TR', options);
+                    }
+                }
+                // Geçerli bir tarih değilse veya biçimlendirme hatası oluşursa başka bir işlem yapın
+                return "Invalid Date";
+            }
+
+            // Details butonuna tıkladığınızda, ilgili satırın bilgilerini modal penceresinde göstermek için JavaScript kullanacağız.
+            $('.details-button').click(function () {
+                var companyName = $(this).data('company-name');
+                var companyType = $(this).data('company-type');
+                var taxNumber = $(this).data('tax-number');
+                var owner = $(this).data('owner');
+                var taxCompany = $(this).data('tax-company');
+                var logo = $(this).data('logo');
+                var phoneNumber = $(this).data('phone-number');
+                var address = $(this).data('address');
+                var email = $(this).data('email');
+                var employeeCount = $(this).data('employee-count');
+                var foundationYear = formatDate($(this).data('foundation-year')); // Format the foundation year
+                var contractBeginningDate = formatDate($(this).data('contract-beginning-date')); // Format the contract beginning date
+                var contractEndDate = formatDate($(this).data('contract-end-date')); // Format the contract end date
+                var status = $(this).data('status') ? "Aktif" : "Pasif";
+
+                // Modal penceresindeki ilgili alanlara bilgileri yerleştirin
+                $('#modalCompanyLogo').attr('src', 'data:image/png;base64,' + logo); // Display the logo
+                $('#modalCompanyName').text(companyName);
+                $('#modalCompanyType').text(companyType);
+                $('#modalTaxNumber').text(taxNumber);
+                $('#modalOwner').text(owner);
+                $('#modalTaxCompany').text(taxCompany);
+                $('#modalPhoneNumber').text(phoneNumber);
+                $('#modalAddress').text(address);
+                $('#modalEmail').text(email);
+                $('#modalEmployeeCount').text(employeeCount);
+                $('#modalFoundationYear').text(foundationYear);
+                $('#modalContractBeginningDate').text(contractBeginningDate);
+                $('#modalContractEndDate').text(contractEndDate);
+                $('#modalStatus').text(status);
+            });
+       
+
+
+            var companies = @Html.Raw(companyData);
+
+
+            var searchInput = document.getElementById("searchInput");
+            var searchButton = document.getElementById("searchButton");
+
+            // Tabloyu sakladığınız element
+            const tableBody = document.getElementById("tbody");
+
+            //searchInput.addEventListener("input", function () {
+            //    var searchText = searchInput.value.toLowerCase();
+
+            //    // Tabloyu temizle
+            //    tableBody.innerHTML = "";
+
+            //    // Arama sonuçlarını bul ve tabloya ekle
+            //    if (companies != null) {
+            //        var i = 0;
+            //        companies.forEach(function (company) {
+            //            var companyName = company.CompanyName.toLowerCase();
+
+            //            if (companyName.includes(searchText)) {
+            //                i++;
+
+            //                var newRow = document.createElement("tr");
+
+            //                // No sütunu
+            //                var noCell = document.createElement("td");
+            //                noCell.setAttribute("scope", "row");
+            //                noCell.className = "ps-4";
+            //                var formCheck = document.createElement("div");
+            //                formCheck.className = "form-check font-size-16";
+            //                formCheck.textContent = i;
+            //                noCell.appendChild(formCheck);
+            //                newRow.appendChild(noCell);
+
+            //                // Company Name sütunu
+            //                var companyNameCell = document.createElement("td");
+            //                var companyImage = document.createElement("img");
+            //                companyImage.src = "data:image/png;base64," + company.Logo;
+            //                companyImage.alt = "";
+            //                companyImage.className = "avatar-sm rounded-circle me-2";
+            //                var companyLink = document.createElement("a");
+            //                companyLink.className = "text-body";
+            //                companyLink.textContent = company.CompanyName;
+            //                companyNameCell.appendChild(companyImage);
+            //                companyNameCell.appendChild(companyLink);
+            //                newRow.appendChild(companyNameCell);
+
+            //                // Diğer sütunları benzer şekilde ekleyebilirsiniz...
+
+            //                // Tabloya yeni satırı ekle
+            //                tableBody.appendChild(newRow);
+            //            }
+            //        });
+            //    }
+
+            //    // Sonuç bulunamadıysa mesajı göster
+            //    if (i === 0) {
+            //        var noResultsRow = document.createElement("tr");
+            //        var noResultsCell = document.createElement("td");
+            //        noResultsCell.setAttribute("colspan", "5");
+            //        noResultsCell.textContent = "No results found.";
+            //        noResultsRow.appendChild(noResultsCell);
+            //        tableBody.appendChild(noResultsRow);
+            //    }
+            //});
+
+
+
+            searchInput.addEventListener("input", function () {
+                var searchText = searchInput.value.toLowerCase();
+
+                // Tabloyu temizle
+                tableBody.innerHTML = "";
+
+                // Arama sonuçlarını bul ve tabloya ekle
+                if (companies != null) {
+                    var i = 0;
+                    companies.forEach(function (company) {
+                        var companyName = company.CompanyName.toLowerCase();
+
+                        if (companyName.includes(searchText)) {
+                            i++;
+
+                            var newRow = document.createElement("tr");
+
+                            // No sütunu
+                            var noCell = document.createElement("td");
+                            noCell.setAttribute("scope", "row");
+                            noCell.className = "ps-4";
+                            var formCheck = document.createElement("div");
+                            formCheck.className = "form-check font-size-16";
+                            formCheck.textContent = i;
+                            noCell.appendChild(formCheck);
+                            newRow.appendChild(noCell);
+
+                            // Company Name sütunu
+                            var companyNameCell = document.createElement("td");
+                            var companyImage = document.createElement("img");
+                            companyImage.src = "data:image/png;base64," + company.Logo;
+                            companyImage.alt = "";
+                            companyImage.className = "avatar-sm rounded-circle me-2";
+                            var companyLink = document.createElement("a");
+                            companyLink.className = "text-body";
+                            companyLink.textContent = company.CompanyName;
+                            companyNameCell.appendChild(companyImage);
+                            companyNameCell.appendChild(companyLink);
+                            newRow.appendChild(companyNameCell);
+
+                            // Company Type sütunu
+                            var companyTypeCell = document.createElement("td");
+                            companyTypeCell.textContent = company.CompanyType;
+                            newRow.appendChild(companyTypeCell);
+
+                            // Tax Number sütunu
+                            var taxNumberCell = document.createElement("td");
+                            taxNumberCell.textContent = company.TaxNumber;
+                            newRow.appendChild(taxNumberCell);
+
+                            // Details buton sütunu
+                            var detailsCell = document.createElement("td");
+                            var detailsButton = document.createElement("button");
+                            detailsButton.type = "button";
+                            detailsButton.className = "btn btn-primary details-button";
+                            detailsButton.dataset.toggle = "modal";
+                            detailsButton.dataset.target = "#companyModal";
+                            detailsButton.dataset.companyName = company.CompanyName;
+                            detailsButton.dataset.companyType = company.CompanyType;
+                            detailsButton.dataset.taxNumber = company.TaxNumber;
+                            detailsButton.dataset.owner = company.OwnerId;
+                            detailsButton.dataset.taxCompany = company.TaxCompany;
+                            detailsButton.dataset.logo = "data:image/png;base64," + company.Logo;
+                            detailsButton.dataset.phoneNumber = company.PhoneNumber;
+                            detailsButton.dataset.address = company.Address;
+                            detailsButton.dataset.email = company.Email;
+                            detailsButton.dataset.employeeCount = company.EmployeeCount;
+                            detailsButton.dataset.foundationYear = company.FoundationYear;
+                            detailsButton.dataset.contractBeginningDate = company.ContractBeginningDate;
+                            detailsButton.dataset.contractEndDate = company.ContractEndDate;
+                            detailsButton.dataset.status = company.Status;
+                            detailsButton.textContent = "Details";
+                            detailsCell.appendChild(detailsButton);
+                            newRow.appendChild(detailsCell);
+
+                            // Tabloya yeni satırı ekle
+                            tableBody.appendChild(newRow);
+                        }
+                    });
+                }
+
+                // Sonuç bulunamadıysa mesajı göster
+                if (i === 0) {
+                    var noResultsRow = document.createElement("tr");
+                    var noResultsCell = document.createElement("td");
+                    noResultsCell.setAttribute("colspan", "5");
+                    noResultsCell.textContent = "No results found.";
+                    noResultsRow.appendChild(noResultsCell);
+                    tableBody.appendChild(noResultsRow);
+                }
+            })
+        </script>
+    </div>
+</body>
+</html>
+
